@@ -98,19 +98,20 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 
 <script>
 // ─────────────────────────────────────────────────────
-//  CONFIG - 2X SZÉLESEBB ÚT ÉS HATALMAS HEXÁK
+//  CONFIG - KEVÉSBÉ DURVA SEBESSÉG
 // ─────────────────────────────────────────────────────
-const R       = 340;   // Óriási hatszögek
-const ROAD_W  = 240;   // 2x szélesebb aszfalt (rengeteg hely!)
-const CAR_L   = 36;    // Az autó marad viszonylag kis méretű, 
-const CAR_W   = 16;    // így a pálya hatalmasnak érződik.
+const R       = 340;   
+const ROAD_W  = 240;   
+const CAR_L   = 36;    
+const CAR_W   = 16;
 
-const MAX_ROAD = 800;  // Gyorsított max sebesség
-const MAX_HEX  = 200;  
-const ACCEL    = 450;
-const BRAKE    = 1000;  
-const COAST    = 150;
-const STEER    = 2.6;  
+// JELENTŐSEN LASSÍTOTT FIZIKA:
+const MAX_ROAD = 500;  // Végsebesség csökkentve (800-ról)
+const MAX_HEX  = 140;  // Fűben picit lassabb
+const ACCEL    = 220;  // Lassabb felgyorsulás (450-ről)
+const BRAKE    = 800;  // Kicsit lágyabb fék
+const COAST    = 100;  // Lágyabb motorfék
+const STEER    = 2.4;  // Stabilabb kormányzás lassabb tempónál
 
 const cv  = document.getElementById('c');
 const ctx = cv.getContext('2d');
@@ -383,7 +384,7 @@ function resetGame() {
     speed:0, trail:[], falling:false, fallAlpha:1, 
     tIdx: 0, onHex:true, onRoad:true 
   };
-  cam = { x:car.x, y:car.y, zoom:0.55 }; // Távolabbi nézet az óriási pályához
+  cam = { x:car.x, y:car.y, zoom:0.55 }; 
   raceStart=0; raceTime=0; finished=false;
   updHUD(0);
 }
@@ -428,9 +429,6 @@ function update(ts) {
   car.x += Math.cos(car.angle)*car.speed*dt;
   car.y += Math.sin(car.angle)*car.speed*dt;
 
-  // ─────────────────────────────────────────────────────
-  //  HÍD ÉS POZÍCIÓ LOGIKA JAVÍTVA
-  // ─────────────────────────────────────────────────────
   let candidates = [];
   for (let i = 0; i < tiles.length; i++) {
     if (inHex(car.x, car.y, tiles[i].cx, tiles[i].cy)) {
@@ -445,21 +443,17 @@ function update(ts) {
   if (candidates.length > 0) {
     foundHex = true;
 
-    // Ha egyszerre lennénk az alagútban (1) és a hídon (7) - ami azonos hely
     if (candidates.includes(1) && candidates.includes(7)) {
-       // Ha a felüljárón (7), az oda vezető (6), vagy onnan lehozó (8) szakaszon vagyunk:
        if ([6, 7, 8].includes(car.tIdx)) {
-          candidates = candidates.filter(c => c !== 1); // Zárjuk ki az alagutat
+          candidates = candidates.filter(c => c !== 1); 
        } else {
-          candidates = candidates.filter(c => c !== 7); // Zárjuk ki a hidat
+          candidates = candidates.filter(c => c !== 7); 
        }
     }
 
-    // Válaszuk azt a hexát a jelöltek közül, amelyiknek az útjához közelebb vagyunk
     let minRD = Infinity;
     for (let c of candidates) {
         let rd = distToRoadCenter(car.x, car.y, tiles[c]);
-        // Bónusz: Preferáljuk, ahol eddig is voltunk, vagy a következőt a sorban
         if (c === car.tIdx) rd -= 100; 
         if (c === (car.tIdx + 1) % tiles.length) rd -= 50; 
         
@@ -471,11 +465,10 @@ function update(ts) {
     bestRoadDist = distToRoadCenter(car.x, car.y, tiles[newIdx]);
   }
 
-  // Leesés mechanika: Ha a hídon (7) vagyunk, de nagyon letértünk az útról -> Zuhanás az alagútba (1)
   if (newIdx === 7 && bestRoadDist > ROAD_W/2 + 5) {
     newIdx = 1;
     bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]);
-    car.speed *= 0.5; // Zuhanástól lassul
+    car.speed *= 0.5; 
     doFlash('LEESTÉL A HÍDRÓL!');
   }
 
