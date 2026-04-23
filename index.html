@@ -117,7 +117,7 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 </div>
 
 <div id="lvlSel">
-  <div style="position:absolute; top:16px; right:20px; color:rgba(0, 255, 255, 0.6); font-size:14px; font-weight:bold; letter-spacing:2px; z-index:110;">v2.1.2</div>
+  <div style="position:absolute; top:16px; right:20px; color:rgba(0, 255, 255, 0.6); font-size:14px; font-weight:bold; letter-spacing:2px; z-index:110;">v2.2.0</div>
   <h1 style="text-align:center; color:#fff; font-size:clamp(30px,8vw,60px); letter-spacing:8px; text-shadow:0 0 20px #00ffff; margin-bottom:10px;">HEX RACER</h1>
   <p style="color:#a0d8f1; font-size:14px; letter-spacing:1px; text-align:center; margin-bottom:40px; max-width:600px; line-height:1.6;">
     Reach the Gold time (<span style="color:#ffcc00; font-weight:bold;">05:00.000</span>) to unlock the next level!<br>
@@ -155,29 +155,29 @@ const ctx = cv.getContext('2d');
 function rsz(){ cv.width=innerWidth; cv.height=innerHeight; }
 rsz(); window.addEventListener('resize', rsz);
 
-// Track Structures: [entry_edge, exit_edge, Type]
-// Types: 'S'=Start, 'F'=Finish, 'O'=Overpass, 'N'=Narrow
+// Track Structures: Perfectly mapped topological tracks. No overlapping. 
+// Narrow (N) elements only introduced from Level 6.
 const LEVEL_DATA = [
-  // Lvl 1: Warmup
-  [[4,0,'S'], [3,5], [2,4], [1,3], [0,2], [5,1,'F']],
-  // Lvl 2: Classic Eight (with Bridge)
-  [[4,0,'S'], [3,1], [4,2], [5,3], [0,4], [1,0], [3,5], [2,5,'O'], [2,4], [1,3], [0,2], [5,1,'F']],
-  // Lvl 3: First Narrows
-  [[4,1,'S'], [4,1,'N'], [4,2], [5,3,'N'], [0,4], [1,5], [2,0,'N'], [3,1,'F']],
-  // Lvl 4: Long Straights
-  [[4,1,'S'], [4,1], [4,1], [4,2], [5,2], [5,2], [5,3], [0,3], [0,3], [0,4], [1,4], [1,4], [1,5], [2,5], [2,5], [2,0,'F']],
-  // Lvl 5: Technical Corners
-  [[4,0,'S'], [3,5], [2,3], [0,5], [2,4], [1,0], [3,2], [5,4], [1,3], [0,2], [5,1,'F']],
-  // Lvl 6: Bridge & Narrow Combo
-  [[4,1,'S'], [4,2], [5,0], [3,1,'N'], [4,2], [5,3], [0,4], [1,5], [2,5,'O'], [2,0], [3,1,'N'], [4,2,'F']],
-  // Lvl 7: Zig-zag
-  [[4,0,'S'], [3,1], [4,0], [3,1], [4,0], [3,1], [4,2], [5,3], [0,4], [1,5], [2,0], [3,4], [1,5], [2,0], [3,1,'F']],
-  // Lvl 8: Precision Driving
-  [[4,1,'S'], [4,1,'N'], [4,1], [4,2], [5,2,'N'], [5,2], [5,3], [0,3,'N'], [0,3], [0,4], [1,4,'N'], [1,4], [1,5], [2,5,'N'], [2,5], [2,0,'F']],
-  // Lvl 9: Double Bridge
-  [[4,0,'S'], [3,1], [4,2], [5,3], [0,4], [1,0], [3,5], [2,5,'O'], [2,4], [1,3], [0,4], [1,0], [3,5], [2,5,'O'], [2,4], [1,3], [0,2], [5,1,'F']],
-  // Lvl 10: The Marathon
-  [[4,1,'S'], [4,2], [5,3,'N'], [0,4], [1,0], [3,5], [2,5,'O'], [2,3], [0,4], [1,5,'N'], [2,0], [3,4], [1,2], [5,0,'N'], [3,5], [2,5,'O'], [2,4], [1,3], [0,2,'N'], [5,0], [3,1,'F']]
+  // Lvl 1: Straight & Easy
+  [[3,0,'S'], [3,0], [3,1], [4,1], [4,1], [4,0], [3,0], [3,0,'F']],
+  // Lvl 2: The Snake
+  [[3,0,'S'], [3,1], [4,2], [5,1], [4,0], [3,1], [4,2], [5,0], [3,0,'F']],
+  // Lvl 3: The First Bridge (over nothing)
+  [[3,0,'S'], [3,0], [3,1], [4,1], [4,1], [4,1,'O'], [4,1], [4,2], [5,3], [0,2], [5,1,'F']],
+  // Lvl 4: Long Sweepers
+  [[4,1,'S'], [4,1], [4,2], [5,2], [5,2], [5,3], [0,3], [0,3], [0,4], [1,4], [1,4], [1,5], [2,5], [2,0], [3,0,'F']],
+  // Lvl 5: Double Bridge
+  [[3,0,'S'], [3,0], [3,0,'O'], [3,0], [3,1], [4,2], [5,1], [4,1], [4,1], [4,1,'O'], [4,1], [4,2], [5,1,'F']],
+  // Lvl 6: Introducing Narrows
+  [[3,0,'S'], [3,0,'N'], [3,0,'N'], [3,1,'N'], [4,1], [4,2], [5,1,'N'], [4,0,'N'], [3,0,'F']],
+  // Lvl 7: Narrow Bridge
+  [[3,0,'S'], [3,1], [4,1], [4,1,'N'], [4,1], [4,1,'O'], [4,1], [4,2,'N'], [5,3,'N'], [0,3,'N'], [0,2], [5,1,'F']],
+  // Lvl 8: Technical Narrows
+  [[4,1,'S'], [4,2], [5,2,'N'], [5,2,'N'], [5,3], [0,4], [1,4,'N'], [1,4,'N'], [1,5], [2,0], [3,0,'N'], [3,0,'N'], [3,1,'F']],
+  // Lvl 9: Narrow Mountain
+  [[3,0,'S'], [3,0,'N'], [3,1], [4,1], [4,1,'O'], [4,1], [4,2,'N'], [5,2,'N'], [5,3], [0,3], [0,3,'O'], [0,3], [0,4,'N'], [1,5,'N'], [2,0,'F']],
+  // Lvl 10: The Ultimate Test
+  [[3,0,'S'], [3,0,'N'], [3,1], [4,2,'N'], [5,2,'N'], [5,1], [4,1], [4,1,'O'], [4,1], [4,0,'N'], [3,1,'N'], [4,2], [5,2], [5,2,'O'], [5,2], [5,3,'N'], [0,4,'N'], [1,5], [2,0,'F']]
 ];
 
 // Load Saves
@@ -307,7 +307,6 @@ function buildTrack() {
 //  ROAD BEZIER
 // ─────────────────────────────────────────────────────
 function tileBezier(tile) {
-  // ITT VOLT A HIBA: cy helyett tile.cy kell
   const p0 = edgeMid(tile.cx, tile.cy, tile.entry);
   const p3 = edgeMid(tile.cx, tile.cy, tile.exit);
   const cp1 = { x: tile.cx*0.5 + p0.x*0.5, y: tile.cy*0.5 + p0.y*0.5 };
@@ -661,22 +660,28 @@ function update(ts) {
           car.y -= Math.sin(car.angle) * car.speed * dt * 1.5;
           car.speed *= 0.5;
           bestRoadDist = maxAllowedDist - 8;
-          doFlash('GUARDRAIL!', '#ffaa00');
+          // Ne mutasson sárga figyelmeztetést, ha már célba értünk
+          if (!finished) doFlash('GUARDRAIL!', '#ffaa00');
           car.onRoad = true; 
       } 
       else if (!car.onHex) { 
-          car.falling = true; 
-          car.fallAlpha = 1; 
-          car.trail = []; 
-          car.skidMarks = []; 
-          doFlash('OFF TRACK!', '#ff3366');
+          // JAVÍTÁS: Ha már célba értek, ne pusztuljon el az autó, ha kimegy a fűre/semmibe
+          if (!finished) {
+              car.falling = true; 
+              car.fallAlpha = 1; 
+              car.trail = []; 
+              car.skidMarks = []; 
+              doFlash('OFF TRACK!', '#ff3366');
+          }
       }
       else if (checkHighUp(car.tIdx) && !currentTile.isOverpass && bestRoadDist > maxAllowedDist + 35) {
-          car.falling = true; 
-          car.fallAlpha = 1; 
-          car.trail = []; 
-          car.skidMarks = []; 
-          doFlash('FELL OFF RAMP!', '#ff3366');
+          if (!finished) {
+              car.falling = true; 
+              car.fallAlpha = 1; 
+              car.trail = []; 
+              car.skidMarks = []; 
+              doFlash('FELL OFF RAMP!', '#ff3366');
+          }
       }
   }
 
