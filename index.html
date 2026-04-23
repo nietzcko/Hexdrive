@@ -81,7 +81,7 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 
 <div id="hud">
   <div class="hp">TIME<span class="hb" id="hT">00:00.000</span></div>
-  <div class="hp center">CHECKPOINTS<span class="hb" id="hC">0/12</span></div>
+  <div class="hp center">SECTORS<span class="hb" id="hC">0/12</span></div>
   <div class="hp right" style="opacity:0; pointer-events:none;">PLACEHOLDER</div>
 </div>
 <div id="hud" style="top:auto; bottom:140px; justify-content:flex-end;">
@@ -110,14 +110,11 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 const R       = 340;   
 const ROAD_W  = 240;   
 
-// F1 KASZTNI ÉS KEREKEK
 const CAR_L   = 60;    
 const CAR_W   = 12;    
 const CAR_FRONT_TRACK = 46; 
 const CAR_REAR_TRACK  = 46; 
-
-// ELŐRÉBB TOLT TENGELYEK (AXLES)
-const CAR_FRONT_AXLE = CAR_L * 0.42; // Jóval előrébb van az orrkúp mögött
+const CAR_FRONT_AXLE = CAR_L * 0.42; 
 const CAR_REAR_AXLE  = CAR_L * 0.32;
 
 const MAX_ROAD = 500;  
@@ -156,14 +153,14 @@ function nextCenter(prevExitMidX, prevExitMidY, prevExit) {
 // ─────────────────────────────────────────────────────
 const SEQ = [
   { entry: 4, exit: 0, isStart: true },    // 0
-  { entry: 3, exit: 1 },                   // 1 
+  { entry: 3, exit: 1 },                   // 1 (Alagút)
   { entry: 4, exit: 2 },                   // 2
   { entry: 5, exit: 3 },                   // 3 
   { entry: 0, exit: 4 },                   // 4
   { entry: 1, exit: 0 },                   // 5
-  { entry: 3, exit: 5 },                   // 6 
-  { entry: 2, exit: 5, isOverpass: true }, // 7 
-  { entry: 2, exit: 4 },                   // 8
+  { entry: 3, exit: 5 },                   // 6 (Rámpa fel)
+  { entry: 2, exit: 5, isOverpass: true }, // 7 (Híd)
+  { entry: 2, exit: 4 },                   // 8 (Rámpa le)
   { entry: 1, exit: 3 },                   // 9 
   { entry: 0, exit: 2 },                   // 10
   { entry: 5, exit: 1, isFinish: true }    // 11
@@ -179,7 +176,7 @@ function buildTrack() {
       entry: s.entry, exit: s.exit,
       isStart: s.isStart || false,
       isFinish: s.isFinish || false,
-      isCheckpoint: true, // MINDEN TILE CHECKPOINT
+      isCheckpoint: true, 
       isOverpass: s.isOverpass || false,
       visited: false
     };
@@ -315,7 +312,6 @@ function renderTile(tile) {
   if (tile.isStart) drawLineAcross(0.05, '#00ff00', 12);
   if (tile.isFinish) drawLineAcross(0.95, '#ffff00', 12);
   
-  // Minden tile kap egy finom kék checkpoint vonalat (kivéve rajt/cél hogy ne zavarjon be)
   if (tile.isCheckpoint && !tile.isStart && !tile.isFinish) {
     drawLineAcross(0.5, 'rgba(0, 255, 255, 0.4)', 8);
     c.shadowColor = '#00ffff'; c.shadowBlur = 10;
@@ -390,7 +386,7 @@ function crossedFinish(px, py) {
 
 function resetGame() {
   tiles = buildTrack();
-  totalCPs = tiles.length; // Minden tile checkpoint
+  totalCPs = tiles.length; 
   
   const st = tiles[0];
   const em = edgeMid(st.cx, st.cy, st.exit);
@@ -408,8 +404,7 @@ function resetGame() {
   updHUD(0);
 }
 
-function getWheelCoords(baseAngle, isSkidding) {
-  // Előre toltuk az első tengelyt, hátra a hátsót
+function getWheelCoords(baseAngle, isSkidding, isHighUp) {
   const frontDist = CAR_FRONT_AXLE;
   const rearDist  = -CAR_REAR_AXLE;
 
@@ -430,9 +425,9 @@ function getWheelCoords(baseAngle, isSkidding) {
 
   if(car.onRoad && isSkidding) {
     const ptL = wheels.rl; 
-    car.skidMarks.push({ p0: {x: ptL.x, y: ptL.y}, p1: {x: ptL.x, y: ptL.y}, wheel: 'l' });
+    car.skidMarks.push({ p0: {x: ptL.x, y: ptL.y}, p1: {x: ptL.x, y: ptL.y}, wheel: 'l', high: isHighUp });
     const ptR = wheels.rr;
-    car.skidMarks.push({ p0: {x: ptR.x, y: ptR.y}, p1: {x: ptR.x, y: ptR.y}, wheel: 'r' });
+    car.skidMarks.push({ p0: {x: ptR.x, y: ptR.y}, p1: {x: ptR.x, y: ptR.y}, wheel: 'r', high: isHighUp });
     if(car.skidMarks.length > 500) car.skidMarks.splice(0, 2);
   }
   return wheels;
@@ -526,31 +521,35 @@ function update(ts) {
     bestRoadDist = distToRoadCenter(car.x, car.y, tiles[newIdx]);
   }
 
-  if (newIdx === 7 && bestRoadDist > ROAD_W/2 + 5) {
-    newIdx = 1;
-    bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]);
-    car.speed *= 0.5; 
+  car.tIdx = newIdx;
+  car.onHex = foundHex;
+  car.onRoad = bestRoadDist <= ROAD_W/2 + 5;
+
+  // HIBAJAVÍTÁS: Stabil híd-leesés logika
+  if (car.tIdx === 7 && !car.onRoad) {
+    car.falling = true;
+    car.fallAlpha = 1;
+    car.trail = [];
+    car.skidMarks = [];
     doFlash('FELL OFF BRIDGE!', '#ff3366');
+  } else if (!car.onHex) { 
+    car.falling = true; 
+    car.fallAlpha = 1; 
+    car.trail = []; 
+    car.skidMarks = []; 
   }
 
-  if (newIdx === 1 && bestRoadDist > ROAD_W/2 - 2) {
+  // Alagút oszlopainak ütközése
+  if (!car.falling && car.tIdx === 1 && !car.onRoad) {
     let distToBridge = distToRoadCenter(car.x, car.y, tiles[7]);
     if (distToBridge < ROAD_W/2 + 18) { 
       car.x = px; 
       car.y = py;
       car.speed *= -0.4; 
-      bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]); 
       doFlash('CRASH!', '#ff3366');
     }
   }
 
-  car.tIdx = newIdx;
-  car.onHex = foundHex;
-  car.onRoad = bestRoadDist <= ROAD_W/2 + 5;
-
-  if (!car.onHex) { car.falling=true; car.fallAlpha=1; car.trail=[]; car.skidMarks=[]; }
-
-  // CHECKPOINT LOGIKA: Minden tile számít
   if (car.onRoad && !car.falling && !finished) {
     const currentTile = tiles[car.tIdx];
     if (!currentTile.visited) {
@@ -560,18 +559,20 @@ function update(ts) {
     }
   }
 
+  // Z-index réteg kiszámítása
+  const isHighUp = (car.tIdx >= 6 && car.tIdx <= 8);
   const isSkidding = car.onRoad && !finished && brake && car.speed > 60; 
-  getWheelCoords(car.angle, isSkidding);
+  
+  getWheelCoords(car.angle, isSkidding, isHighUp);
 
   if (!car.falling && car.speed>5) {
-    car.trail.push({x:car.x,y:car.y});
+    car.trail.push({x:car.x,y:car.y, high: isHighUp});
     if(car.trail.length>160) car.trail.shift();
   }
 
   if (raceStart===0 && car.speed>5) raceStart=ts;
   if (raceStart>0 && !finished) raceTime=ts-raceStart;
 
-  // CÉLBA ÉRÉS LOGIKÁJA
   if (!car.falling && !finished && crossedFinish(px,py)) {
     if (car.cpsHit >= totalCPs) {
       finished = true;
@@ -622,7 +623,7 @@ function drawTileGlow(sx, sy, s) {
   ctx.restore();
 }
 
-function drawSkidMarks() {
+function drawSkidMarks(isHigh) {
   if (car.skidMarks.length < 2) return;
   
   ctx.lineWidth = 4 * cam.zoom;
@@ -636,6 +637,10 @@ function drawSkidMarks() {
     for (let i = 0; i < car.skidMarks.length; i++) {
       const mark = car.skidMarks[i];
       if (mark.wheel !== side) continue;
+      if (mark.high !== isHigh) {
+        last = null;
+        continue;
+      }
       
       const p1 = w2s(mark.p1.x, mark.p1.y);
       if (last === null) {
@@ -653,11 +658,37 @@ function drawSkidMarks() {
   }
 }
 
+function drawTrail(isHigh) {
+  ctx.beginPath();
+  let drawing = false;
+  for(let i=1; i<car.trail.length; i++){
+    const t0 = car.trail[i-1];
+    const t1 = car.trail[i];
+    if (t0.high !== isHigh || t1.high !== isHigh) {
+      drawing = false;
+      continue;
+    }
+    const pa=w2s(t0.x, t0.y);
+    const pb=w2s(t1.x, t1.y);
+    if (!drawing) {
+      ctx.moveTo(pa.sx, pa.sy);
+      drawing = true;
+    }
+    ctx.lineTo(pb.sx, pb.sy);
+  }
+  ctx.strokeStyle=`rgba(255,50,0,0.5)`; ctx.lineWidth=4*cam.zoom; ctx.lineCap='round'; ctx.stroke();
+}
+
+// ─────────────────────────────────────────────────────
+//  HIBAJAVÍTOTT RENDERELÉSI SORREND (Z-INDEX)
+// ─────────────────────────────────────────────────────
 function drawScene() {
   drawBackground();
   const half=TSIZE/2;
   const s=cam.zoom;
+  const isHighUp = (car.tIdx >= 6 && car.tIdx <= 8); // A rámpától (6) a hídon át a lejtőig (8) "felső szinten" vagyunk
 
+  // 1. ALSÓ PÁLYA ELEMEI
   for (const t of tiles) {
     if (t.isOverpass) continue;
     const {sx,sy}=w2s(t.cx,t.cy);
@@ -668,14 +699,12 @@ function drawScene() {
     if (t.visited) drawTileGlow(sx, sy, s); 
   }
 
-  drawSkidMarks(); 
+  // 2. ALSÓ RÉTEG: Féknyomok, füst, és az autó, HA nincs a felüljárón
+  drawSkidMarks(false); 
+  if(car.trail.length>1 && !car.falling) drawTrail(false);
+  if (!isHighUp) drawCar();
 
-  if(car.trail.length>1 && !car.falling && car.tIdx < 7){
-    drawTrail();
-  }
-
-  if (car.tIdx < 7) drawCar();
-
+  // 3. FELSŐ PÁLYA ELEMEI (HÍD)
   for (const t of tiles) {
     if (!t.isOverpass) continue;
     const {sx,sy}=w2s(t.cx,t.cy);
@@ -685,23 +714,12 @@ function drawScene() {
     if (t.visited) drawTileGlow(sx, sy, s);
   }
 
-  if (car.tIdx >= 7) {
-    drawTrail(); 
-    drawCar();
-  }
+  // 4. FELSŐ RÉTEG: A hídon lévő féknyomok és az autó, HA rámpán vagy hídon van
+  drawSkidMarks(true); 
+  if(car.trail.length>1 && !car.falling) drawTrail(true);
+  if (isHighUp) drawCar();
 }
 
-function drawTrail() {
-  ctx.beginPath();
-  for(let i=1; i<car.trail.length; i++){
-    const pa=w2s(car.trail[i-1].x, car.trail[i-1].y);
-    const pb=w2s(car.trail[i].x, car.trail[i].y);
-    ctx.moveTo(pa.sx,pa.sy); ctx.lineTo(pb.sx,pb.sy);
-  }
-  ctx.strokeStyle=`rgba(255,50,0,0.5)`; ctx.lineWidth=4*cam.zoom; ctx.lineCap='round'; ctx.stroke();
-}
-
-// HATALMAS F1 KEREKEK
 function drawF1Wheels(wheelCoords, s) {
   const fw_l = 16, fw_w = 9;  
   const rw_l = 18, rw_w = 11; 
@@ -739,7 +757,10 @@ function drawF1Wheels(wheelCoords, s) {
 function drawCar() {
   const {sx,sy}=w2s(car.x,car.y);
   const s=cam.zoom;
-  const wheelCoords = getWheelCoords(car.angle, false);
+  
+  // Átadjuk az "isHighUp" információt, bár itt csak a vizualizáció megy
+  const isHighUp = (car.tIdx >= 6 && car.tIdx <= 8);
+  const wheelCoords = getWheelCoords(car.angle, false, isHighUp);
 
   drawF1Wheels(wheelCoords, s); 
 
@@ -763,16 +784,14 @@ function drawCar() {
   ctx.roundRect(-floorW/2, -L*0.2, floorW, floorL, 3);
   ctx.fill();
 
-  // Felfüggesztések - Most már pontosan a kerekek tengelyéhez húzva!
   ctx.strokeStyle = '#2a2a2a';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  // Első 
   ctx.moveTo(-W*0.6, -L*0.35); ctx.lineTo(-CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
   ctx.moveTo(-W*0.6, -L*0.2);  ctx.lineTo(-CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
   ctx.moveTo(W*0.6, -L*0.35);  ctx.lineTo(CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
   ctx.moveTo(W*0.6, -L*0.2);   ctx.lineTo(CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
-  // Hátsó
+  
   ctx.moveTo(-W*0.5, L*0.35);  ctx.lineTo(-CAR_REAR_TRACK/2, CAR_REAR_AXLE);
   ctx.moveTo(-W*0.5, L*0.2);   ctx.lineTo(-CAR_REAR_TRACK/2, CAR_REAR_AXLE);
   ctx.moveTo(W*0.5, L*0.35);   ctx.lineTo(CAR_REAR_TRACK/2, CAR_REAR_AXLE);
