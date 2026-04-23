@@ -117,6 +117,7 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 </div>
 
 <div id="lvlSel">
+  <div style="position:absolute; top:16px; right:20px; color:rgba(0, 255, 255, 0.6); font-size:14px; font-weight:bold; letter-spacing:2px; z-index:110;">v2.1.0</div>
   <h1 style="text-align:center; color:#fff; font-size:clamp(30px,8vw,60px); letter-spacing:8px; text-shadow:0 0 20px #00ffff; margin-bottom:10px;">HEX RACER</h1>
   <p style="color:#a0d8f1; font-size:14px; letter-spacing:1px; text-align:center; margin-bottom:40px; max-width:600px; line-height:1.6;">
     Reach the Gold time (<span style="color:#ffcc00; font-weight:bold;">05:00.000</span>) to unlock the next level!<br>
@@ -332,7 +333,7 @@ function distToRoadCenter(px, py, tile) {
   return best;
 }
 
-// JAVÍTÁS: Nagyobb tolerancia a hatszögek szélénél (3.0 -> 35.0), hogy fűvön kanyarodáskor ne öljön meg
+// Added larger tolerance so corner-cutting on grass doesn't instantly kill
 function inHex(px, py, cx, cy) {
   for (let e=0; e<6; e++) {
     const a = edgeAngle(e);
@@ -665,7 +666,7 @@ function update(ts) {
           doFlash('GUARDRAIL!', '#ffaa00');
           car.onRoad = true; 
       } 
-      // FALL OFF WORLD BOUNDARY (completely left the hexagons)
+      // FALL OFF WORLD BOUNDARY
       else if (!car.onHex) { 
           car.falling = true; 
           car.fallAlpha = 1; 
@@ -673,7 +674,7 @@ function update(ts) {
           car.skidMarks = []; 
           doFlash('OFF TRACK!', '#ff3366');
       }
-      // FALL OFF RAMP SIDE (JAVÍTVA: extra ráhagyás, hogy ne ess le egyből, ha kicsit a fűre mégy)
+      // FALL OFF RAMP SIDE (with extra tolerance)
       else if (checkHighUp(car.tIdx) && !currentTile.isOverpass && bestRoadDist > maxAllowedDist + 35) {
           car.falling = true; 
           car.fallAlpha = 1; 
