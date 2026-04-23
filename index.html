@@ -117,11 +117,11 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 </div>
 
 <div id="lvlSel">
-  <div style="position:absolute; top:16px; right:20px; color:rgba(0, 255, 255, 0.6); font-size:14px; font-weight:bold; letter-spacing:2px; z-index:110;">v2.2.0</div>
+  <div style="position:absolute; top:16px; right:20px; color:rgba(0, 255, 255, 0.6); font-size:14px; font-weight:bold; letter-spacing:2px; z-index:110;">v2.3.0</div>
   <h1 style="text-align:center; color:#fff; font-size:clamp(30px,8vw,60px); letter-spacing:8px; text-shadow:0 0 20px #00ffff; margin-bottom:10px;">HEX RACER</h1>
   <p style="color:#a0d8f1; font-size:14px; letter-spacing:1px; text-align:center; margin-bottom:40px; max-width:600px; line-height:1.6;">
     Reach the Gold time (<span style="color:#ffcc00; font-weight:bold;">05:00.000</span>) to unlock the next level!<br>
-    <span style="color:#ff3366">Watch out: Grass slows you down, but falling off the grid or ramps is fatal! Bridges have guardrails.</span>
+    <span style="color:#ff3366">Watch out: Speed widens your turns! Grass slows you down. Bridges have guardrails.</span>
   </p>
   <div id="lvlGrid"></div>
 </div>
@@ -155,29 +155,33 @@ const ctx = cv.getContext('2d');
 function rsz(){ cv.width=innerWidth; cv.height=innerHeight; }
 rsz(); window.addEventListener('resize', rsz);
 
-// Track Structures: Perfectly mapped topological tracks. No overlapping. 
-// Narrow (N) elements only introduced from Level 6.
+// Track Structures: [entry_edge, exit_edge, ...Modifiers]
+// Modifiers: 'S'=Start, 'F'=Finish, 'O'=Overpass, 'N'=Narrow
+// Levels 1-5: Perfectly continuous topological tracks.
+// Levels 6-10: Contains "Grass Jumps" where entry doesn't match previous exit!
 const LEVEL_DATA = [
-  // Lvl 1: Straight & Easy
-  [[3,0,'S'], [3,0], [3,1], [4,1], [4,1], [4,0], [3,0], [3,0,'F']],
-  // Lvl 2: The Snake
-  [[3,0,'S'], [3,1], [4,2], [5,1], [4,0], [3,1], [4,2], [5,0], [3,0,'F']],
-  // Lvl 3: The First Bridge (over nothing)
-  [[3,0,'S'], [3,0], [3,1], [4,1], [4,1], [4,1,'O'], [4,1], [4,2], [5,3], [0,2], [5,1,'F']],
-  // Lvl 4: Long Sweepers
-  [[4,1,'S'], [4,1], [4,2], [5,2], [5,2], [5,3], [0,3], [0,3], [0,4], [1,4], [1,4], [1,5], [2,5], [2,0], [3,0,'F']],
-  // Lvl 5: Double Bridge
-  [[3,0,'S'], [3,0], [3,0,'O'], [3,0], [3,1], [4,2], [5,1], [4,1], [4,1], [4,1,'O'], [4,1], [4,2], [5,1,'F']],
-  // Lvl 6: Introducing Narrows
-  [[3,0,'S'], [3,0,'N'], [3,0,'N'], [3,1,'N'], [4,1], [4,2], [5,1,'N'], [4,0,'N'], [3,0,'F']],
-  // Lvl 7: Narrow Bridge
-  [[3,0,'S'], [3,1], [4,1], [4,1,'N'], [4,1], [4,1,'O'], [4,1], [4,2,'N'], [5,3,'N'], [0,3,'N'], [0,2], [5,1,'F']],
-  // Lvl 8: Technical Narrows
-  [[4,1,'S'], [4,2], [5,2,'N'], [5,2,'N'], [5,3], [0,4], [1,4,'N'], [1,4,'N'], [1,5], [2,0], [3,0,'N'], [3,0,'N'], [3,1,'F']],
-  // Lvl 9: Narrow Mountain
-  [[3,0,'S'], [3,0,'N'], [3,1], [4,1], [4,1,'O'], [4,1], [4,2,'N'], [5,2,'N'], [5,3], [0,3], [0,3,'O'], [0,3], [0,4,'N'], [1,5,'N'], [2,0,'F']],
-  // Lvl 10: The Ultimate Test
-  [[3,0,'S'], [3,0,'N'], [3,1], [4,2,'N'], [5,2,'N'], [5,1], [4,1], [4,1,'O'], [4,1], [4,0,'N'], [3,1,'N'], [4,2], [5,2], [5,2,'O'], [5,2], [5,3,'N'], [0,4,'N'], [1,5], [2,0,'F']]
+  // Lvl 1: Warmup (Continuous, wide)
+  [[4,1,'S'], [4,1], [4,2], [5,2], [5,2], [5,1,'F']],
+  // Lvl 2: Classic Eight (Continuous with bridge)
+  [[4,0,'S'], [3,1], [4,2], [5,3], [0,4], [1,0], [3,5], [2,5,'O'], [2,4], [1,3], [0,2], [5,1,'F']],
+  // Lvl 3: First Narrows (Continuous, introducing narrow sections)
+  [[4,1,'S'], [4,1,'N'], [4,2,'N'], [5,3,'N'], [0,4], [1,5], [2,0,'N'], [3,1,'F']],
+  // Lvl 4: The Thread (Continuous, ENTIRELY NARROW!)
+  [[4,0,'S','N'], [3,5,'N'], [2,4,'N'], [1,3,'N'], [0,2,'N'], [5,1,'F','N']],
+  // Lvl 5: Double Bridge (Continuous, mixed widths)
+  [[3,0,'S'], [3,0], [3,0,'O'], [3,0], [3,1,'N'], [4,2,'N'], [5,1], [4,1], [4,1], [4,1,'O'], [4,1], [4,2], [5,1,'F']],
+  
+  // -- GRASS JUMPS INTRODUCED HERE --
+  // Lvl 6: Grass Jumps 1 (Disconnected tracks!)
+  [[4,1,'S'], [4,1], [3,2], /* JUMP! */ [5,2], [4,3], /* JUMP! */ [0,2], [5,1,'F']],
+  // Lvl 7: Narrow Grass Jumps
+  [[4,0,'S'], [3,1], [5,2,'N'], /* JUMP! */ [5,3,'N'], [1,4,'N'], /* JUMP! */ [1,0,'F']],
+  // Lvl 8: The Broken Bridge (Jumps before getting to bridges)
+  [[4,1,'S'], [4,1,'N'], [3,2,'N'], /* JUMP! */ [5,3,'N'], [0,4,'N'], [4,2], /* JUMP! */ [5,2,'O'], [5,1,'F']],
+  // Lvl 9: The Frogger (Constant jumps!)
+  [[4,1,'S','N'], [3,1,'N'], /* JUMP! */ [3,2,'N'], /* JUMP! */ [4,2,'N'], /* JUMP! */ [4,3,'N'], /* JUMP! */ [5,3,'N'], /* JUMP! */ [5,4,'N'], /* JUMP! */ [0,4,'N'], /* JUMP! */ [0,5,'N'], /* JUMP! */ [1,0,'F','N']],
+  // Lvl 10: Championship Track (Everything mixed)
+  [[4,1,'S'], [4,1,'N'], [4,2,'N'], [5,3], [0,4], [1,0], [4,0], /* JUMP! */ [3,5,'O'], [2,4], [2,3], /* JUMP! */ [1,2,'N'], [5,1,'N'], /* JUMP! */ [5,0,'N'], [3,5,'O'], [2,4], [1,3], [0,2], [5,1,'F']]
 ];
 
 // Load Saves
@@ -244,13 +248,18 @@ function initMenu() {
 
 function loadLevel(idx) {
     currentLevelIdx = idx;
-    SEQ = LEVEL_DATA[idx].map(t => ({
-        entry: t[0], exit: t[1],
-        isStart: t[2] === 'S',
-        isFinish: t[2] === 'F',
-        isOverpass: t[2] === 'O',
-        isNarrow: t[2] === 'N'
-    }));
+    
+    // Robust parsing to allow any order of 'S', 'N', 'O', 'F'
+    SEQ = LEVEL_DATA[idx].map(t => {
+        let isS=false, isF=false, isO=false, isN=false;
+        for(let i=2; i<t.length; i++) {
+            if(t[i]==='S') isS=true;
+            if(t[i]==='F') isF=true;
+            if(t[i]==='O') isO=true;
+            if(t[i]==='N') isN=true;
+        }
+        return { entry: t[0], exit: t[1], isStart: isS, isFinish: isF, isOverpass: isO, isNarrow: isN };
+    });
     
     document.getElementById('lvlSel').style.display = 'none';
     document.getElementById('finishMenu').style.display = 'none';
@@ -553,7 +562,6 @@ function getWheelCoords(baseAngle, isSkidding, isHighUp) {
   return wheels;
 }
 
-// Elevated Check
 function checkHighUp(idx) {
     if (!tiles[idx]) return false;
     if (tiles[idx].isOverpass) return true;
@@ -603,9 +611,12 @@ function update(ts) {
   if (!car.onRoad) car.speed *= (1 - 1.5*dt); // Slower on grass
   car.speed = Math.max(0, Math.min(maxSpd, car.speed));
 
-  const sr = STEER * (0.3 + 0.7*car.speed/MAX_ROAD);
+  // ÚJ KORMÁNYZÁSI LOGIKA: Nagyobb sebesség = szélesebb ív, nehezebb kanyarodni
+  const speedRatio = car.speed / MAX_ROAD;
+  const sr = STEER * (1.2 - 0.8 * speedRatio); 
+  
   if (!finished) {
-      car.angle += steer*sr*dt;
+      car.angle += steer * sr * dt;
       car.steerVisual = steer * (Math.abs(sr/STEER)) * 0.5;
   }
 
@@ -660,12 +671,10 @@ function update(ts) {
           car.y -= Math.sin(car.angle) * car.speed * dt * 1.5;
           car.speed *= 0.5;
           bestRoadDist = maxAllowedDist - 8;
-          // Ne mutasson sárga figyelmeztetést, ha már célba értünk
           if (!finished) doFlash('GUARDRAIL!', '#ffaa00');
           car.onRoad = true; 
       } 
       else if (!car.onHex) { 
-          // JAVÍTÁS: Ha már célba értek, ne pusztuljon el az autó, ha kimegy a fűre/semmibe
           if (!finished) {
               car.falling = true; 
               car.fallAlpha = 1; 
@@ -881,125 +890,4 @@ function drawCar() {
   const floorL = L * 0.6;
   
   ctx.save(); ctx.translate(5,5); ctx.globalAlpha*=0.4;
-  ctx.fillStyle='#000'; ctx.beginPath();
-  ctx.roundRect(-floorW/2, -L*0.2, floorW, floorL, 3); ctx.fill();
-  ctx.moveTo(0, -L*0.8); ctx.lineTo(W, -L*0.5); ctx.lineTo(W, L*0.45); ctx.lineTo(-W, L*0.45); ctx.lineTo(-W, -L*0.5);
-  ctx.closePath(); ctx.fill();
-  ctx.restore();
-
-  ctx.fillStyle='#1c1d21';
-  ctx.beginPath(); ctx.roundRect(-floorW/2, -L*0.2, floorW, floorL, 3); ctx.fill();
-
-  ctx.strokeStyle = '#2a2a2a';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(-W*0.25, -L*0.65); ctx.lineTo(-CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
-  ctx.moveTo(-W*0.35, -L*0.45); ctx.lineTo(-CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
-  ctx.moveTo(W*0.25, -L*0.65);  ctx.lineTo(CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
-  ctx.moveTo(W*0.35, -L*0.45);  ctx.lineTo(CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
-  
-  ctx.moveTo(-W*0.5, L*0.35);  ctx.lineTo(-CAR_REAR_TRACK/2, CAR_REAR_AXLE);
-  ctx.moveTo(-W*0.5, L*0.2);   ctx.lineTo(-CAR_REAR_TRACK/2, CAR_REAR_AXLE);
-  ctx.moveTo(W*0.5, L*0.35);   ctx.lineTo(CAR_REAR_TRACK/2, CAR_REAR_AXLE);
-  ctx.moveTo(W*0.5, L*0.2);    ctx.lineTo(CAR_REAR_TRACK/2, CAR_REAR_AXLE);
-  ctx.stroke();
-
-  ctx.fillStyle = '#111'; ctx.fillRect(-W*1.8, -L*0.85, W*3.6, L*0.12);
-  ctx.fillStyle = '#cc0022'; ctx.fillRect(-W*1.7, -L*0.83, W*3.4, L*0.06);
-  ctx.fillStyle = '#111'; ctx.fillRect(-W*1.8, -L*0.9, W*0.15, L*0.25); ctx.fillRect(W*1.65, -L*0.9, W*0.15, L*0.25);
-  
-  ctx.fillStyle = '#111'; ctx.fillRect(-W*1.6, L*0.45, W*3.2, L*0.15);
-  ctx.fillStyle = '#cc0022'; ctx.fillRect(-W*1.5, L*0.48, W*3.0, L*0.08);
-  ctx.fillStyle = '#111'; ctx.fillRect(-W*1.6, L*0.42, W*0.15, L*0.25); ctx.fillRect(W*1.45, L*0.42, W*0.15, L*0.25);
-
-  ctx.fillStyle = '#cc0022'; 
-  ctx.beginPath();
-  ctx.moveTo(0, -L*0.85); ctx.lineTo(W*0.3, -L*0.6); ctx.lineTo(W*0.5, -L*0.2); ctx.lineTo(W*1.1, 0);       
-  ctx.lineTo(W*0.8, L*0.3); ctx.lineTo(W*0.3, L*0.48); ctx.lineTo(-W*0.3, L*0.48); ctx.lineTo(-W*0.8, L*0.3);
-  ctx.lineTo(-W*1.1, 0); ctx.lineTo(-W*0.5, -L*0.2); ctx.lineTo(-W*0.3, -L*0.6);
-  ctx.closePath(); ctx.fill();
-
-  ctx.fillStyle = '#880011';
-  ctx.beginPath(); ctx.moveTo(W*0.5, -L*0.1); ctx.lineTo(W*1.0, 0); ctx.lineTo(W*0.7, L*0.25); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(-W*0.5, -L*0.1); ctx.lineTo(-W*1.0, 0); ctx.lineTo(-W*0.7, L*0.25); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#111';
-  ctx.beginPath(); ctx.ellipse(W*0.7, -L*0.05, W*0.3, L*0.05, 0, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(-W*0.7, -L*0.05, W*0.3, L*0.05, 0, 0, Math.PI*2); ctx.fill();
-
-  ctx.fillStyle = '#050505'; ctx.beginPath(); ctx.ellipse(0, -L*0.05, W*0.4, L*0.18, 0, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#ffee00'; ctx.beginPath(); ctx.arc(0, -L*0.05, W*0.25, 0, Math.PI*2); ctx.fill();
-
-  ctx.strokeStyle = '#aa0011'; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.ellipse(0, -L*0.05, W*0.45, L*0.22, 0, -Math.PI/4, Math.PI+Math.PI/4); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, -L*0.05 - L*0.22); ctx.lineTo(0, -L*0.05 - L*0.45); ctx.stroke();
-
-  ctx.fillStyle='#fff'; ctx.font=`bold ${CAR_W*0.9}px Courier New`;
-  ctx.textAlign='center'; ctx.textBaseline='middle'; 
-  ctx.save(); ctx.translate(0, L*0.25); ctx.fillText(String(currentLevelIdx+1), 0, 0); ctx.restore();
-
-  ctx.restore();
-}
-
-function updHUD(){
-  document.getElementById('hT').textContent=fmt(raceTime);
-  document.getElementById('hS').textContent=Math.round(car.speed*0.6);
-  document.getElementById('hC').textContent=`${car.cpsHit}/${totalCPs}`;
-}
-
-let flT=null;
-function doFlash(t, color='#00ffff'){
-  const el=document.getElementById('fl');
-  el.textContent=t; 
-  el.style.color = color;
-  el.style.textShadow = `0 0 20px ${color}, 0 4px 10px rgba(0,0,0,0.8)`;
-  el.style.opacity='1';
-  clearTimeout(flT); flT=setTimeout(()=>el.style.opacity='0',2500);
-}
-
-function showFinish(isGold){
-  state='finish';
-  const ov=document.getElementById('finishMenu');
-  
-  let nextBtnHTML = '';
-  if (currentLevelIdx + 1 < LEVEL_DATA.length) {
-      const nextUnlocked = savedRecords[currentLevelIdx] !== null && savedRecords[currentLevelIdx] <= GOLD_TIME;
-      if (nextUnlocked) {
-          nextBtnHTML = `<button class="ob" onclick="loadLevel(${currentLevelIdx + 1})">NEXT LEVEL</button>`;
-      }
-  }
-
-  ov.innerHTML=`
-    <h1 style="font-size:clamp(30px,8vw,60px); color:#fff;">${isNewRecord ? 'NEW RECORD!' : 'RACE FINISHED!'}</h1>
-    <p style="margin-bottom:20px;">TIME<br><span style="font-size:46px;color:#00ffcc;font-weight:900;text-shadow:0 0 20px #00ffcc">${fmt(raceTime)}</span></p>
-    
-    ${isGold 
-        ? `<p style="color:#ffcc00;font-size:18px;letter-spacing:2px;font-weight:bold; margin-bottom:30px; text-shadow:0 0 10px #ffcc00;">🏆 GOLD TIME ACHIEVED! 🏆</p>` 
-        : `<p style="color:#ff3366;font-size:16px;letter-spacing:2px;font-weight:bold; margin-bottom:30px;">TARGET: ${fmt(GOLD_TIME)} FOR GOLD</p>`
-    }
-    
-    <div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">
-        <button class="ob" onclick="initMenu()">MENU</button>
-        <button class="ob" onclick="loadLevel(${currentLevelIdx})">RETRY</button>
-        ${nextBtnHTML}
-    </div>
-  `;
-  ov.style.display='flex';
-}
-
-function loop(ts){
-  if (state === 'racing') {
-      update(ts);
-      drawScene();
-  } else if (state === 'finish') {
-      drawScene(); 
-  } else {
-      drawBackground(); 
-  }
-  requestAnimationFrame(loop);
-}
-
-initMenu();
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
+  ctx.fillStyle='#0
