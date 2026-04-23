@@ -12,102 +12,114 @@ body {
 }
 #c { display:block; position:fixed; inset:0; width:100%; height:100%; touch-action:none; }
 
-#hud, #hud2 {
-position:fixed; left:0; right:0;
-display:flex; justify-content:space-between; align-items:flex-start;
-padding:16px; pointer-events:none; z-index:10; display:none;
+#hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  padding: 16px; pointer-events: none; z-index: 10; display: none;
 }
-#hud { top:0; }
-#hud2 { top:auto; bottom:140px; justify-content:flex-end; }
+.hud-left { display: flex; justify-content: flex-start; }
+.hud-center { display: flex; justify-content: center; }
+.hud-right { display: flex; justify-content: flex-end; align-items: flex-start; }
 
 .hp {
-background:rgba(0, 15, 30, 0.85); border:2px solid rgba(0, 255, 255, 0.4); border-radius:8px;
-padding:8px 14px; font-size:10px; letter-spacing:2px; color:#5cd6ff; text-transform:uppercase;
-backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); min-width: 100px;
+  background: rgba(0, 15, 30, 0.85); border: 2px solid rgba(0, 255, 255, 0.4); border-radius: 8px;
+  padding: 8px 14px; font-size: 10px; letter-spacing: 2px; color: #5cd6ff; text-transform: uppercase;
+  backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); min-width: 100px;
 }
-.hp.center { text-align:center; border-color:rgba(0, 255, 255, 0.8); box-shadow: 0 0 15px rgba(0,255,255,0.2); }
-.hp.right { text-align:right; }
-.hb { font-size:24px; font-weight:900; color:#fff; display:block; letter-spacing:1px; margin-top:2px; }
+.hp.center { text-align: center; border-color: rgba(0, 255, 255, 0.8); box-shadow: 0 0 15px rgba(0,255,255,0.2); }
+.hb { font-size: 24px; font-weight: 900; color: #fff; display: block; letter-spacing: 1px; margin-top: 2px; }
+
+/* Small square icon buttons */
+.icon-btn {
+  background: rgba(0, 20, 50, 0.85); border: 2px solid #00cfff; color: #fff;
+  border-radius: 8px; cursor: pointer; transition: all .15s; pointer-events: auto;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent; font-weight: bold;
+}
+.icon-btn:active { background: #00cfff; color: #000; box-shadow: 0 0 20px #00cfff; }
+
+#btnMenu { width: 44px; height: 44px; font-size: 26px; }
+#btnRetry { position: fixed; right: 24px; bottom: 140px; width: 60px; height: 60px; font-size: 32px; z-index: 50; display: none; }
 
 #ctrl {
-position:fixed; bottom:0; left:0; right:0; height:120px;
-display:flex; align-items:center; justify-content:space-between;
-padding:0 24px 20px; display:none;
-background:linear-gradient(to top, rgba(0, 30, 60, 0.8) 20%, transparent);
-z-index:10; gap:16px; pointer-events:none;
+  position: fixed; bottom: 0; left: 0; right: 0; height: 120px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px 20px; display: none;
+  background: linear-gradient(to top, rgba(0, 30, 60, 0.8) 20%, transparent);
+  z-index: 10; gap: 16px; pointer-events: none;
 }
 .cb {
-flex:1; max-width:220px; height:80px; pointer-events:auto; touch-action: none;
-background:rgba(0, 20, 50, 0.85); border:3px solid rgba(0, 255, 255, 0.3); border-radius:18px;
-display:flex; align-items:center; justify-content:center;
-font-size:36px; color:rgba(0, 255, 255, 0.5); cursor:pointer;
-transition:all .1s; -webkit-tap-highlight-color:transparent;
-box-shadow: 0 8px 16px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,255,255,0.1);
+  flex: 1; max-width: 220px; height: 80px; pointer-events: auto; touch-action: none;
+  background: rgba(0, 20, 50, 0.85); border: 3px solid rgba(0, 255, 255, 0.3); border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; color: rgba(0, 255, 255, 0.5); cursor: pointer;
+  transition: all .1s; -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,255,255,0.1);
 }
 .cb.on { 
-  background:rgba(0, 100, 255, 0.9); border-color:#fff; color:#fff; 
-  box-shadow:0 0 24px rgba(0,255,255,0.6), inset 0 0 15px rgba(255,255,255,0.5); transform:scale(0.96);
+  background: rgba(0, 100, 255, 0.9); border-color: #fff; color: #fff; 
+  box-shadow: 0 0 24px rgba(0,255,255,0.6), inset 0 0 15px rgba(255,255,255,0.5); transform: scale(0.96);
 }
-.cb span { pointer-events:none; }
-
-.ob {
-font-size:14px; font-weight:900; letter-spacing:3px; padding:12px 24px;
-background:rgba(0, 20, 40, 0.9); border:2px solid #00cfff; color:#fff;
-border-radius:6px; cursor:pointer; font-family:'Courier New',monospace; transition:all .15s;
-pointer-events:auto; text-transform:uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-touch-action: none; -webkit-tap-highlight-color:transparent;
-}
-.ob:hover,.ob:active { background:#00cfff; color:#000; box-shadow: 0 0 20px #00cfff; }
+.cb span { pointer-events: none; }
 
 #fl {
-position:fixed; top:35%; left:50%; transform:translate(-50%,-50%);
-font-size:clamp(20px,6vw,46px); font-weight:900; letter-spacing:4px; text-align:center;
-color:#00ffff; text-shadow:0 0 20px #00ffff, 0 4px 10px rgba(0,0,0,0.8);
-pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
+  position: fixed; top: 35%; left: 50%; transform: translate(-50%,-50%);
+  font-size: clamp(20px,6vw,46px); font-weight: 900; letter-spacing: 4px; text-align: center;
+  color: #00ffff; text-shadow: 0 0 20px #00ffff, 0 4px 10px rgba(0,0,0,0.8);
+  pointer-events: none; opacity: 0; z-index: 15; transition: opacity .2s;
 }
 
 /* MENU STYLES */
+.ob {
+  font-size: 14px; font-weight: 900; letter-spacing: 3px; padding: 12px 24px;
+  background: rgba(0, 20, 40, 0.9); border: 2px solid #00cfff; color: #fff;
+  border-radius: 6px; cursor: pointer; font-family: 'Courier New',monospace; transition: all .15s;
+  pointer-events: auto; text-transform: uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  touch-action: none; -webkit-tap-highlight-color: transparent;
+}
+.ob:hover, .ob:active { background: #00cfff; color: #000; box-shadow: 0 0 20px #00cfff; }
+
 #lvlSel {
-  position:fixed; inset:0; background:#04060a; z-index:100; display:flex; 
-  flex-direction:column; align-items:center; padding:40px 20px; overflow-y:auto;
+  position: fixed; inset: 0; background: #04060a; z-index: 100; display: flex; 
+  flex-direction: column; align-items: center; padding: 40px 20px; overflow-y: auto;
 }
 #lvlGrid {
-  display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px; width:100%; max-width:800px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; width: 100%; max-width: 800px;
 }
 .lvlBtn {
-  background:rgba(0, 30, 60, 0.8); border:2px solid #00cfff; border-radius:12px;
-  padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  background: rgba(0, 30, 60, 0.8); border: 2px solid #00cfff; border-radius: 12px;
+  padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
-.lvlBtn:hover { transform:scale(1.03); background:rgba(0, 50, 100, 0.9); box-shadow:0 0 15px #00cfff; }
-.lvlBtn.locked { background:rgba(20, 20, 20, 0.8); border-color:#444; cursor:not-allowed; transform:none; box-shadow:none; }
-.ln { font-size:22px; font-weight:900; color:#fff; margin-bottom:10px; letter-spacing: 2px;}
-.lt { font-size:14px; color:#00ffff; }
-.lvlBtn.locked .ln { color:#555; }
-.lvlBtn.locked .lt { color:#555; }
+.lvlBtn:hover { transform: scale(1.03); background: rgba(0, 50, 100, 0.9); box-shadow: 0 0 15px #00cfff; }
+.lvlBtn.locked { background: rgba(20, 20, 20, 0.8); border-color: #444; cursor: not-allowed; transform: none; box-shadow: none; }
+.ln { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 10px; letter-spacing: 2px;}
+.lt { font-size: 14px; color: #00ffff; }
+.lvlBtn.locked .ln { color: #555; }
+.lvlBtn.locked .lt { color: #555; }
 
 #finishMenu {
-  position:fixed; inset:0; background:rgba(0, 10, 25, 0.95); z-index:100;
-  display:none; flex-direction:column; align-items:center; justify-content:center;
-  backdrop-filter: blur(8px); touch-action: none; text-align:center; padding:20px;
+  position: fixed; inset: 0; background: rgba(0, 10, 25, 0.95); z-index: 100;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px); touch-action: none; text-align: center; padding: 20px;
 }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 
-<div id="btnBox" style="position:fixed; top:16px; right:16px; z-index:50; display:none; gap:10px;">
-    <button class="ob" onclick="loadLevel(currentLevelIdx)">RETRY</button>
-    <button class="ob" onclick="initMenu()">MENU</button>
+<div id="hud">
+  <div class="hud-left">
+      <div class="hp">PR<span class="hb" id="hPR">--:--.---</span></div>
+  </div>
+  <div class="hud-center">
+      <div class="hp center">TIME<span class="hb" id="hT">00:00.000</span></div>
+  </div>
+  <div class="hud-right">
+      <div id="btnMenu" class="icon-btn" onclick="initMenu()">☰</div>
+  </div>
 </div>
 
-<div id="hud">
-  <div class="hp">TIME<span class="hb" id="hT">00:00.000</span></div>
-  <div class="hp center">SECTOR<span class="hb" id="hC">0/12</span></div>
-  <div class="hp right" style="opacity:0; pointer-events:none;">PLACEHOLDER</div>
-</div>
-<div id="hud2">
-    <div class="hp right">SPEED<span class="hb" id="hS">0</span></div>
-</div>
+<div id="btnRetry" class="icon-btn" onclick="loadLevel(currentLevelIdx)">⟳</div>
 
 <div id="fl"></div>
 
@@ -121,7 +133,7 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
   <h1 style="text-align:center; color:#fff; font-size:clamp(30px,8vw,60px); letter-spacing:8px; text-shadow:0 0 20px #00ffff; margin-bottom:10px;">HEX RACER</h1>
   <p style="color:#a0d8f1; font-size:14px; letter-spacing:1px; text-align:center; margin-bottom:40px; max-width:600px; line-height:1.6;">
     Reach the Gold time (<span style="color:#ffcc00; font-weight:bold;">05:00.000</span>) to unlock the next level!<br>
-    <span style="color:#ff3366">Watch out: Speed widens your turns! Grass slows you down. Bridges have guardrails.</span>
+    <span style="color:#ff3366">Watch out: Grass slows you down, but falling off the grid or ramps is fatal! Bridges have guardrails.</span>
   </p>
   <div id="lvlGrid"></div>
 </div>
@@ -134,7 +146,7 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 // ─────────────────────────────────────────────────────
 const R       = 340;   
 const ROAD_W  = 240;   
-const GOLD_TIME = 300000; // 5 min gold time in ms
+const GOLD_TIME = 300000; 
 
 const CAR_L   = 60;    
 const CAR_W   = 12;    
@@ -148,43 +160,36 @@ const MAX_HEX  = 140;
 const ACCEL    = 220;  
 const BRAKE    = 800;  
 const COAST    = 100;  
-const STEER    = 2.4;  
+const STEER    = 1.5;  // Csökkentve 2.4-ről, hogy kevésbé rántson!
 
 const cv  = document.getElementById('c');
 const ctx = cv.getContext('2d');
 function rsz(){ cv.width=innerWidth; cv.height=innerHeight; }
 rsz(); window.addEventListener('resize', rsz);
 
-// Track Structures: [entry_edge, exit_edge, ...Modifiers]
-// Modifiers: 'S'=Start, 'F'=Finish, 'O'=Overpass, 'N'=Narrow
-// Levels 1-5: Perfectly continuous topological tracks.
-// Levels 6-10: Contains "Grass Jumps" where entry doesn't match previous exit!
 const LEVEL_DATA = [
-  // Lvl 1: Warmup (Continuous, wide)
-  [[4,1,'S'], [4,1], [4,2], [5,2], [5,2], [5,1,'F']],
-  // Lvl 2: Classic Eight (Continuous with bridge)
-  [[4,0,'S'], [3,1], [4,2], [5,3], [0,4], [1,0], [3,5], [2,5,'O'], [2,4], [1,3], [0,2], [5,1,'F']],
-  // Lvl 3: First Narrows (Continuous, introducing narrow sections)
-  [[4,1,'S'], [4,1,'N'], [4,2,'N'], [5,3,'N'], [0,4], [1,5], [2,0,'N'], [3,1,'F']],
-  // Lvl 4: The Thread (Continuous, ENTIRELY NARROW!)
-  [[4,0,'S','N'], [3,5,'N'], [2,4,'N'], [1,3,'N'], [0,2,'N'], [5,1,'F','N']],
-  // Lvl 5: Double Bridge (Continuous, mixed widths)
-  [[3,0,'S'], [3,0], [3,0,'O'], [3,0], [3,1,'N'], [4,2,'N'], [5,1], [4,1], [4,1], [4,1,'O'], [4,1], [4,2], [5,1,'F']],
-  
-  // -- GRASS JUMPS INTRODUCED HERE --
-  // Lvl 6: Grass Jumps 1 (Disconnected tracks!)
-  [[4,1,'S'], [4,1], [3,2], /* JUMP! */ [5,2], [4,3], /* JUMP! */ [0,2], [5,1,'F']],
-  // Lvl 7: Narrow Grass Jumps
-  [[4,0,'S'], [3,1], [5,2,'N'], /* JUMP! */ [5,3,'N'], [1,4,'N'], /* JUMP! */ [1,0,'F']],
-  // Lvl 8: The Broken Bridge (Jumps before getting to bridges)
-  [[4,1,'S'], [4,1,'N'], [3,2,'N'], /* JUMP! */ [5,3,'N'], [0,4,'N'], [4,2], /* JUMP! */ [5,2,'O'], [5,1,'F']],
-  // Lvl 9: The Frogger (Constant jumps!)
-  [[4,1,'S','N'], [3,1,'N'], /* JUMP! */ [3,2,'N'], /* JUMP! */ [4,2,'N'], /* JUMP! */ [4,3,'N'], /* JUMP! */ [5,3,'N'], /* JUMP! */ [5,4,'N'], /* JUMP! */ [0,4,'N'], /* JUMP! */ [0,5,'N'], /* JUMP! */ [1,0,'F','N']],
-  // Lvl 10: Championship Track (Everything mixed)
-  [[4,1,'S'], [4,1,'N'], [4,2,'N'], [5,3], [0,4], [1,0], [4,0], /* JUMP! */ [3,5,'O'], [2,4], [2,3], /* JUMP! */ [1,2,'N'], [5,1,'N'], /* JUMP! */ [5,0,'N'], [3,5,'O'], [2,4], [1,3], [0,2], [5,1,'F']]
+  // Lvl 1: Straight & Easy
+  [[3,0,'S'], [3,0], [3,1], [4,1], [4,1], [4,0], [3,0], [3,0,'F']],
+  // Lvl 2: The Snake
+  [[3,0,'S'], [3,1], [4,2], [5,1], [4,0], [3,1], [4,2], [5,0], [3,0,'F']],
+  // Lvl 3: The First Bridge (over nothing)
+  [[3,0,'S'], [3,0], [3,1], [4,1], [4,1], [4,1,'O'], [4,1], [4,2], [5,3], [0,2], [5,1,'F']],
+  // Lvl 4: Long Sweepers
+  [[4,1,'S'], [4,1], [4,2], [5,2], [5,2], [5,3], [0,3], [0,3], [0,4], [1,4], [1,4], [1,5], [2,5], [2,0], [3,0,'F']],
+  // Lvl 5: Double Bridge
+  [[3,0,'S'], [3,0], [3,0,'O'], [3,0], [3,1], [4,2], [5,1], [4,1], [4,1], [4,1,'O'], [4,1], [4,2], [5,1,'F']],
+  // Lvl 6: Introducing Narrows
+  [[3,0,'S'], [3,0,'N'], [3,0,'N'], [3,1,'N'], [4,1], [4,2], [5,1,'N'], [4,0,'N'], [3,0,'F']],
+  // Lvl 7: Narrow Bridge
+  [[3,0,'S'], [3,1], [4,1], [4,1,'N'], [4,1], [4,1,'O'], [4,1], [4,2,'N'], [5,3,'N'], [0,3,'N'], [0,2], [5,1,'F']],
+  // Lvl 8: Technical Narrows
+  [[4,1,'S'], [4,2], [5,2,'N'], [5,2,'N'], [5,3], [0,4], [1,4,'N'], [1,4,'N'], [1,5], [2,0], [3,0,'N'], [3,0,'N'], [3,1,'F']],
+  // Lvl 9: Narrow Mountain
+  [[3,0,'S'], [3,0,'N'], [3,1], [4,1], [4,1,'O'], [4,1], [4,2,'N'], [5,2,'N'], [5,3], [0,3], [0,3,'O'], [0,3], [0,4,'N'], [1,5,'N'], [2,0,'F']],
+  // Lvl 10: The Ultimate Test
+  [[3,0,'S'], [3,0,'N'], [3,1], [4,2,'N'], [5,2,'N'], [5,1], [4,1], [4,1,'O'], [4,1], [4,0,'N'], [3,1,'N'], [4,2], [5,2], [5,2,'O'], [5,2], [5,3,'N'], [0,4,'N'], [1,5], [2,0,'F']]
 ];
 
-// Load Saves
 let savedRecords = Array(LEVEL_DATA.length).fill(null);
 try {
     const stored = localStorage.getItem('hexRacerRecords');
@@ -199,9 +204,6 @@ let SEQ = [];
 let currentLevelIdx = 0;
 let totalCPs = 0;
 
-// ─────────────────────────────────────────────────────
-//  MENU & PROGRESSION
-// ─────────────────────────────────────────────────────
 function fmt(ms){
   if (ms === null || ms === undefined) return '--:--.---';
   const m=Math.floor(ms/60000);
@@ -214,9 +216,8 @@ function initMenu() {
     state = 'menu';
     document.getElementById('finishMenu').style.display = 'none';
     document.getElementById('hud').style.display = 'none';
-    document.getElementById('hud2').style.display = 'none';
     document.getElementById('ctrl').style.display = 'none';
-    document.getElementById('btnBox').style.display = 'none';
+    document.getElementById('btnRetry').style.display = 'none';
     
     const grid = document.getElementById('lvlGrid');
     grid.innerHTML = '';
@@ -242,31 +243,25 @@ function initMenu() {
             unlocked = false; 
         }
     }
-    
     document.getElementById('lvlSel').style.display = 'flex';
 }
 
 function loadLevel(idx) {
     currentLevelIdx = idx;
-    
-    // Robust parsing to allow any order of 'S', 'N', 'O', 'F'
-    SEQ = LEVEL_DATA[idx].map(t => {
-        let isS=false, isF=false, isO=false, isN=false;
-        for(let i=2; i<t.length; i++) {
-            if(t[i]==='S') isS=true;
-            if(t[i]==='F') isF=true;
-            if(t[i]==='O') isO=true;
-            if(t[i]==='N') isN=true;
-        }
-        return { entry: t[0], exit: t[1], isStart: isS, isFinish: isF, isOverpass: isO, isNarrow: isN };
-    });
+    SEQ = LEVEL_DATA[idx].map(t => ({
+        entry: t[0], exit: t[1],
+        isStart: t[2] === 'S',
+        isFinish: t[2] === 'F',
+        isOverpass: t[2] === 'O',
+        isNarrow: t[2] === 'N'
+    }));
     
     document.getElementById('lvlSel').style.display = 'none';
     document.getElementById('finishMenu').style.display = 'none';
-    document.getElementById('hud').style.display = 'flex';
-    document.getElementById('hud2').style.display = 'flex';
+    document.getElementById('hud').style.display = 'grid';
     document.getElementById('ctrl').style.display = 'flex';
-    document.getElementById('btnBox').style.display = 'flex';
+    document.getElementById('btnRetry').style.display = 'flex';
+    document.getElementById('hPR').textContent = fmt(savedRecords[idx]);
     
     resetGame();
     state = 'racing';
@@ -299,7 +294,6 @@ function buildTrack() {
       entry: s.entry, exit: s.exit,
       isStart: s.isStart || false,
       isFinish: s.isFinish || false,
-      isCheckpoint: true, 
       isOverpass: s.isOverpass || false,
       isNarrow: s.isNarrow || false,
       visited: false
@@ -312,9 +306,6 @@ function buildTrack() {
   return tiles;
 }
 
-// ─────────────────────────────────────────────────────
-//  ROAD BEZIER
-// ─────────────────────────────────────────────────────
 function tileBezier(tile) {
   const p0 = edgeMid(tile.cx, tile.cy, tile.entry);
   const p3 = edgeMid(tile.cx, tile.cy, tile.exit);
@@ -342,13 +333,29 @@ function distToRoadCenter(px, py, tile) {
   return best;
 }
 
+// JAVÍTÁS: Mivel már a kerekek határait nézzük, elég 5 pixel "matek hiba" ráhagyás.
 function inHex(px, py, cx, cy) {
   for (let e=0; e<6; e++) {
     const a = edgeAngle(e);
     const mid = edgeMid(cx, cy, e);
-    if ((px-mid.x)*Math.cos(a) + (py-mid.y)*Math.sin(a) > 35.0) return false; 
+    if ((px-mid.x)*Math.cos(a) + (py-mid.y)*Math.sin(a) > 5.0) return false; 
   }
   return true;
+}
+
+// Physics specific wheel calculator
+function getPhysicsWheels(cx, cy, angle) {
+    const fD = CAR_FRONT_AXLE, rD = -CAR_REAR_AXLE;
+    const fX = Math.cos(angle)*fD, fY = Math.sin(angle)*fD;
+    const rX = Math.cos(angle)*rD, rY = Math.sin(angle)*rD;
+    const dx = Math.cos(angle+Math.PI/2), dy = Math.sin(angle+Math.PI/2);
+    const trF = CAR_FRONT_TRACK/2, trR = CAR_REAR_TRACK/2;
+    return [
+        {x: cx+fX + dx*trF, y: cy+fY + dy*trF},
+        {x: cx+fX - dx*trF, y: cy+fY - dy*trF},
+        {x: cx+rX + dx*trR, y: cy+rY + dy*trR},
+        {x: cx+rX - dx*trR, y: cy+rY - dy*trR}
+    ];
 }
 
 // ─────────────────────────────────────────────────────
@@ -376,7 +383,6 @@ function renderTile(tile) {
     c.closePath();
   }
 
-  // Grass background
   if (!tile.isOverpass) {
     hexPath(3); c.fillStyle='#5cd639'; c.fill(); 
     c.save(); hexPath(1); c.clip();
@@ -404,13 +410,10 @@ function renderTile(tile) {
     c.shadowColor = 'rgba(0,30,60,0.8)'; c.shadowBlur = 40; c.shadowOffsetY = 25;
     drawRoadBez(w+30, '#999'); 
     c.shadowColor = 'transparent';
-    
-    // Guardrail
     drawRoadBez(w+12, '#a0a0a0'); 
     drawRoadBez(w-4, '#d0d0d0'); 
     drawRoadBez(w-10, '#ffffff'); 
   } else {
-    // Dirt padding if narrow
     if (tile.isNarrow) {
         drawRoadBez(ROAD_W, '#3a2415'); 
         drawRoadBez(ROAD_W - 4, '#4a301d');
@@ -530,7 +533,7 @@ function resetGame() {
   };
   cam = { x:car.x, y:car.y, zoom:0.55 }; 
   raceStart=0; raceTime=0; finished=false; isNewRecord=false;
-  updHUD(0);
+  updHUD();
 }
 
 function getWheelCoords(baseAngle, isSkidding, isHighUp) {
@@ -611,12 +614,9 @@ function update(ts) {
   if (!car.onRoad) car.speed *= (1 - 1.5*dt); // Slower on grass
   car.speed = Math.max(0, Math.min(maxSpd, car.speed));
 
-  // ÚJ KORMÁNYZÁSI LOGIKA: Nagyobb sebesség = szélesebb ív, nehezebb kanyarodni
-  const speedRatio = car.speed / MAX_ROAD;
-  const sr = STEER * (1.2 - 0.8 * speedRatio); 
-  
+  const sr = STEER * (0.3 + 0.7*car.speed/MAX_ROAD);
   if (!finished) {
-      car.angle += steer * sr * dt;
+      car.angle += steer*sr*dt;
       car.steerVisual = steer * (Math.abs(sr/STEER)) * 0.5;
   }
 
@@ -631,7 +631,6 @@ function update(ts) {
 
   let newIdx = car.tIdx;
   let foundHex = false;
-  let bestRoadDist = Infinity;
 
   if (candidates.length > 0) {
     foundHex = true;
@@ -645,36 +644,58 @@ function update(ts) {
 
     if (candidates.length === 0) candidates = [car.tIdx];
 
-    let minRD = Infinity;
+    let minCenterRD = Infinity;
     for (let c of candidates) {
         let rd = distToRoadCenter(car.x, car.y, tiles[c]);
         if (c === car.tIdx) rd -= 100; 
         if (c === (car.tIdx + 1) % tiles.length) rd -= 50; 
-        if (rd < minRD) {
-            minRD = rd;
+        if (rd < minCenterRD) {
+            minCenterRD = rd;
             newIdx = c;
         }
     }
-    bestRoadDist = distToRoadCenter(car.x, car.y, tiles[newIdx]);
   }
 
   car.tIdx = newIdx;
   car.onHex = foundHex;
-
   const currentTile = tiles[car.tIdx];
-  if (currentTile) {
-      let maxAllowedDist = (currentTile.isNarrow ? ROAD_W * 0.45 : ROAD_W) / 2;
-      car.onRoad = bestRoadDist <= maxAllowedDist + 5;
 
-      if (currentTile.isOverpass && bestRoadDist > maxAllowedDist - 8) {
+  // KEREKENKÉNTI ÜTKÖZÉS VIZSGÁLAT
+  const physicsWheels = getPhysicsWheels(car.x, car.y, car.angle);
+  let maxWheelDist = 0;
+  let anyWheelOutsideHex = false;
+
+  if (currentTile) {
+      for (let w of physicsWheels) {
+          let d = distToRoadCenter(w.x, w.y, currentTile);
+          if (d > maxWheelDist) maxWheelDist = d;
+          
+          let wheelInAnyHex = false;
+          for (let c of candidates) { 
+               if (inHex(w.x, w.y, tiles[c].cx, tiles[c].cy)) { wheelInAnyHex = true; break; }
+          }
+          if (!wheelInAnyHex) {
+              for (let i=0; i<tiles.length; i++) {
+                  if (inHex(w.x, w.y, tiles[i].cx, tiles[i].cy)) { wheelInAnyHex = true; break; }
+              }
+          }
+          if (!wheelInAnyHex) anyWheelOutsideHex = true;
+      }
+
+      let maxAllowedDist = (currentTile.isNarrow ? ROAD_W * 0.45 : ROAD_W) / 2;
+      car.onRoad = maxWheelDist <= maxAllowedDist + 5;
+
+      // Szalagkorlát
+      if (currentTile.isOverpass && maxWheelDist > maxAllowedDist - 8) {
           car.x -= Math.cos(car.angle) * car.speed * dt * 1.5;
           car.y -= Math.sin(car.angle) * car.speed * dt * 1.5;
           car.speed *= 0.5;
-          bestRoadDist = maxAllowedDist - 8;
+          maxWheelDist = maxAllowedDist - 8;
           if (!finished) doFlash('GUARDRAIL!', '#ffaa00');
           car.onRoad = true; 
       } 
-      else if (!car.onHex) { 
+      // Lezuhanás a semmibe
+      else if (!car.onHex || anyWheelOutsideHex) { 
           if (!finished) {
               car.falling = true; 
               car.fallAlpha = 1; 
@@ -683,7 +704,8 @@ function update(ts) {
               doFlash('OFF TRACK!', '#ff3366');
           }
       }
-      else if (checkHighUp(car.tIdx) && !currentTile.isOverpass && bestRoadDist > maxAllowedDist + 35) {
+      // Lezuhanás rámpáról
+      else if (checkHighUp(car.tIdx) && !currentTile.isOverpass && maxWheelDist > maxAllowedDist + 5) {
           if (!finished) {
               car.falling = true; 
               car.fallAlpha = 1; 
@@ -877,9 +899,16 @@ function drawCar() {
   const {sx,sy}=w2s(car.x,car.y);
   const s=cam.zoom;
   const isHighUp = checkHighUp(car.tIdx);
-  const wheelCoords = getWheelCoords(car.angle, false, isHighUp);
+  
+  // Látványhoz külön lekérjük a kerekeket, a fizika már futott
+  const visualWheels = {
+      fl: { x: car.x + Math.cos(car.angle)*CAR_FRONT_AXLE + Math.cos(car.angle+Math.PI/2)*CAR_FRONT_TRACK/2, y: car.y + Math.sin(car.angle)*CAR_FRONT_AXLE + Math.sin(car.angle+Math.PI/2)*CAR_FRONT_TRACK/2, rot: car.angle + car.steerVisual },
+      fr: { x: car.x + Math.cos(car.angle)*CAR_FRONT_AXLE - Math.cos(car.angle+Math.PI/2)*CAR_FRONT_TRACK/2, y: car.y + Math.sin(car.angle)*CAR_FRONT_AXLE - Math.sin(car.angle+Math.PI/2)*CAR_FRONT_TRACK/2, rot: car.angle + car.steerVisual },
+      rl: { x: car.x - Math.cos(car.angle)*CAR_REAR_AXLE + Math.cos(car.angle+Math.PI/2)*CAR_REAR_TRACK/2,  y: car.y - Math.sin(car.angle)*CAR_REAR_AXLE + Math.sin(car.angle+Math.PI/2)*CAR_REAR_TRACK/2,  rot: car.angle },
+      rr: { x: car.x - Math.cos(car.angle)*CAR_REAR_AXLE - Math.cos(car.angle+Math.PI/2)*CAR_REAR_TRACK/2,  y: car.y - Math.sin(car.angle)*CAR_REAR_AXLE - Math.sin(car.angle+Math.PI/2)*CAR_REAR_TRACK/2,  rot: car.angle }
+  };
 
-  drawF1Wheels(wheelCoords, s); 
+  drawF1Wheels(visualWheels, s); 
 
   ctx.save();
   ctx.globalAlpha=car.falling?Math.max(0,car.fallAlpha):1;
@@ -890,4 +919,123 @@ function drawCar() {
   const floorL = L * 0.6;
   
   ctx.save(); ctx.translate(5,5); ctx.globalAlpha*=0.4;
-  ctx.fillStyle='#0
+  ctx.fillStyle='#000'; ctx.beginPath();
+  ctx.roundRect(-floorW/2, -L*0.2, floorW, floorL, 3); ctx.fill();
+  ctx.moveTo(0, -L*0.8); ctx.lineTo(W, -L*0.5); ctx.lineTo(W, L*0.45); ctx.lineTo(-W, L*0.45); ctx.lineTo(-W, -L*0.5);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle='#1c1d21';
+  ctx.beginPath(); ctx.roundRect(-floorW/2, -L*0.2, floorW, floorL, 3); ctx.fill();
+
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-W*0.25, -L*0.65); ctx.lineTo(-CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
+  ctx.moveTo(-W*0.35, -L*0.45); ctx.lineTo(-CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
+  ctx.moveTo(W*0.25, -L*0.65);  ctx.lineTo(CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
+  ctx.moveTo(W*0.35, -L*0.45);  ctx.lineTo(CAR_FRONT_TRACK/2, -CAR_FRONT_AXLE);
+  
+  ctx.moveTo(-W*0.5, L*0.35);  ctx.lineTo(-CAR_REAR_TRACK/2, CAR_REAR_AXLE);
+  ctx.moveTo(-W*0.5, L*0.2);   ctx.lineTo(-CAR_REAR_TRACK/2, CAR_REAR_AXLE);
+  ctx.moveTo(W*0.5, L*0.35);   ctx.lineTo(CAR_REAR_TRACK/2, CAR_REAR_AXLE);
+  ctx.moveTo(W*0.5, L*0.2);    ctx.lineTo(CAR_REAR_TRACK/2, CAR_REAR_AXLE);
+  ctx.stroke();
+
+  ctx.fillStyle = '#111'; ctx.fillRect(-W*1.8, -L*0.85, W*3.6, L*0.12);
+  ctx.fillStyle = '#cc0022'; ctx.fillRect(-W*1.7, -L*0.83, W*3.4, L*0.06);
+  ctx.fillStyle = '#111'; ctx.fillRect(-W*1.8, -L*0.9, W*0.15, L*0.25); ctx.fillRect(W*1.65, -L*0.9, W*0.15, L*0.25);
+  
+  ctx.fillStyle = '#111'; ctx.fillRect(-W*1.6, L*0.45, W*3.2, L*0.15);
+  ctx.fillStyle = '#cc0022'; ctx.fillRect(-W*1.5, L*0.48, W*3.0, L*0.08);
+  ctx.fillStyle = '#111'; ctx.fillRect(-W*1.6, L*0.42, W*0.15, L*0.25); ctx.fillRect(W*1.45, L*0.42, W*0.15, L*0.25);
+
+  ctx.fillStyle = '#cc0022'; 
+  ctx.beginPath();
+  ctx.moveTo(0, -L*0.85); ctx.lineTo(W*0.3, -L*0.6); ctx.lineTo(W*0.5, -L*0.2); ctx.lineTo(W*1.1, 0);       
+  ctx.lineTo(W*0.8, L*0.3); ctx.lineTo(W*0.3, L*0.48); ctx.lineTo(-W*0.3, L*0.48); ctx.lineTo(-W*0.8, L*0.3);
+  ctx.lineTo(-W*1.1, 0); ctx.lineTo(-W*0.5, -L*0.2); ctx.lineTo(-W*0.3, -L*0.6);
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle = '#880011';
+  ctx.beginPath(); ctx.moveTo(W*0.5, -L*0.1); ctx.lineTo(W*1.0, 0); ctx.lineTo(W*0.7, L*0.25); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-W*0.5, -L*0.1); ctx.lineTo(-W*1.0, 0); ctx.lineTo(-W*0.7, L*0.25); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.ellipse(W*0.7, -L*0.05, W*0.3, L*0.05, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-W*0.7, -L*0.05, W*0.3, L*0.05, 0, 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = '#050505'; ctx.beginPath(); ctx.ellipse(0, -L*0.05, W*0.4, L*0.18, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ffee00'; ctx.beginPath(); ctx.arc(0, -L*0.05, W*0.25, 0, Math.PI*2); ctx.fill();
+
+  ctx.strokeStyle = '#aa0011'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.ellipse(0, -L*0.05, W*0.45, L*0.22, 0, -Math.PI/4, Math.PI+Math.PI/4); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -L*0.05 - L*0.22); ctx.lineTo(0, -L*0.05 - L*0.45); ctx.stroke();
+
+  ctx.fillStyle='#fff'; ctx.font=`bold ${CAR_W*0.9}px Courier New`;
+  ctx.textAlign='center'; ctx.textBaseline='middle'; 
+  ctx.save(); ctx.translate(0, L*0.25); ctx.fillText(String(currentLevelIdx+1), 0, 0); ctx.restore();
+
+  ctx.restore();
+}
+
+function updHUD(){
+  document.getElementById('hT').textContent=fmt(raceTime);
+}
+
+let flT=null;
+function doFlash(t, color='#00ffff'){
+  const el=document.getElementById('fl');
+  el.textContent=t; 
+  el.style.color = color;
+  el.style.textShadow = `0 0 20px ${color}, 0 4px 10px rgba(0,0,0,0.8)`;
+  el.style.opacity='1';
+  clearTimeout(flT); flT=setTimeout(()=>el.style.opacity='0',2500);
+}
+
+function showFinish(isGold){
+  state='finish';
+  const ov=document.getElementById('finishMenu');
+  
+  let nextBtnHTML = '';
+  if (currentLevelIdx + 1 < LEVEL_DATA.length) {
+      const nextUnlocked = savedRecords[currentLevelIdx] !== null && savedRecords[currentLevelIdx] <= GOLD_TIME;
+      if (nextUnlocked) {
+          nextBtnHTML = `<button class="ob" onclick="loadLevel(${currentLevelIdx + 1})">NEXT LEVEL</button>`;
+      }
+  }
+
+  ov.innerHTML=`
+    <h1 style="font-size:clamp(30px,8vw,60px); color:#fff;">${isNewRecord ? 'NEW RECORD!' : 'RACE FINISHED!'}</h1>
+    <p style="margin-bottom:20px;">TIME<br><span style="font-size:46px;color:#00ffcc;font-weight:900;text-shadow:0 0 20px #00ffcc">${fmt(raceTime)}</span></p>
+    
+    ${isGold 
+        ? `<p style="color:#ffcc00;font-size:18px;letter-spacing:2px;font-weight:bold; margin-bottom:30px; text-shadow:0 0 10px #ffcc00;">🏆 GOLD TIME ACHIEVED! 🏆</p>` 
+        : `<p style="color:#ff3366;font-size:16px;letter-spacing:2px;font-weight:bold; margin-bottom:30px;">TARGET: ${fmt(GOLD_TIME)} FOR GOLD</p>`
+    }
+    
+    <div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">
+        <button class="ob" onclick="initMenu()">MENU</button>
+        <button class="ob" onclick="loadLevel(${currentLevelIdx})">RETRY</button>
+        ${nextBtnHTML}
+    </div>
+  `;
+  ov.style.display='flex';
+}
+
+function loop(ts){
+  if (state === 'racing') {
+      update(ts);
+      drawScene();
+  } else if (state === 'finish') {
+      drawScene(); 
+  } else {
+      drawBackground(); 
+  }
+  requestAnimationFrame(loop);
+}
+
+initMenu();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
