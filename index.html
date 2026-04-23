@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>HEX RACER - TRACKMANIA EDITION</title>
+<title>HEX RACER - WIDE TRACKMANIA EDITION</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { 
@@ -98,19 +98,19 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 
 <script>
 // ─────────────────────────────────────────────────────
-//  CONFIG 
+//  CONFIG - 2X SZÉLESEBB ÚT ÉS HATALMAS HEXÁK
 // ─────────────────────────────────────────────────────
-const R       = 260;   
-const ROAD_W  = 120;   
-const CAR_L   = 34;    
-const CAR_W   = 16;
+const R       = 340;   // Óriási hatszögek
+const ROAD_W  = 240;   // 2x szélesebb aszfalt (rengeteg hely!)
+const CAR_L   = 36;    // Az autó marad viszonylag kis méretű, 
+const CAR_W   = 16;    // így a pálya hatalmasnak érződik.
 
-const MAX_ROAD = 650;  
+const MAX_ROAD = 800;  // Gyorsított max sebesség
 const MAX_HEX  = 200;  
-const ACCEL    = 350;
-const BRAKE    = 900;  
+const ACCEL    = 450;
+const BRAKE    = 1000;  
 const COAST    = 150;
-const STEER    = 2.4;  
+const STEER    = 2.6;  
 
 const cv  = document.getElementById('c');
 const ctx = cv.getContext('2d');
@@ -141,14 +141,14 @@ function nextCenter(prevExitMidX, prevExitMidY, prevExit) {
 // ─────────────────────────────────────────────────────
 const SEQ = [
   { entry: 4, exit: 0, isStart: true },    
-  { entry: 3, exit: 1 },                   
+  { entry: 3, exit: 1 },                   // 1: Alagút (Alsó szint)
   { entry: 4, exit: 2 },                   
   { entry: 5, exit: 3 },                   
   { entry: 0, exit: 4 },                   
   { entry: 1, exit: 0 },                   
-  { entry: 3, exit: 5 },                   
-  { entry: 2, exit: 5, isOverpass: true }, 
-  { entry: 2, exit: 4 },                   
+  { entry: 3, exit: 5 },                   // 6: Ráhajtás a hídra
+  { entry: 2, exit: 5, isOverpass: true }, // 7: Felüljáró (Felső szint)
+  { entry: 2, exit: 4 },                   // 8: Lehajtás a hídról
   { entry: 1, exit: 3 },                   
   { entry: 0, exit: 2 },                   
   { entry: 5, exit: 1, isFinish: true }    
@@ -197,20 +197,18 @@ function bezPt(t, p0, c1, c2, p3) {
 function distToRoadCenter(px, py, tile) {
   const bz = tileBezier(tile);
   let best = Infinity;
-  for (let i=0; i<=30; i++) {
-    const pt = bezPt(i/30, bz.p0, bz.cp1, bz.cp2, bz.p3);
+  for (let i=0; i<=40; i++) {
+    const pt = bezPt(i/40, bz.p0, bz.cp1, bz.cp2, bz.p3);
     const d  = Math.hypot(px-pt.x, py-pt.y);
     if (d < best) best = d;
   }
   return best;
 }
 
-// Toleránsabb inHex függvény, hogy a fűben átsodródáskor se ess le a semmibe
 function inHex(px, py, cx, cy) {
   for (let e=0; e<6; e++) {
     const a = edgeAngle(e);
     const mid = edgeMid(cx, cy, e);
-    // Megengedünk 3 pixel "kilógást", hogy biztosan érzékelje az átmenetet
     if ((px-mid.x)*Math.cos(a) + (py-mid.y)*Math.sin(a) > 3.0) return false;
   }
   return true;
@@ -219,7 +217,7 @@ function inHex(px, py, cx, cy) {
 // ─────────────────────────────────────────────────────
 //  RENDERING
 // ─────────────────────────────────────────────────────
-const TSIZE = Math.ceil(R*2 + 6);
+const TSIZE = Math.ceil(R*2 + 10);
 const tCache = new Map();
 
 function renderTile(tile) {
@@ -231,7 +229,6 @@ function renderTile(tile) {
   const c = oc.getContext('2d');
   const cx = TSIZE/2, cy = TSIZE/2;
 
-  // hexPath-nak most átadhatunk extra pixeleket az átfedéshez (padding)
   function hexPath(padding = 0) {
     c.beginPath();
     for (let i=0; i<6; i++) {
@@ -243,13 +240,13 @@ function renderTile(tile) {
     c.closePath();
   }
 
-  // Fű háttér - 2.5 pixellel túllóg, így nincs rés a csempék között!
+  // Fű
   if (!tile.isOverpass) {
-    hexPath(2.5); c.fillStyle='#5cd639'; c.fill(); 
+    hexPath(3); c.fillStyle='#5cd639'; c.fill(); 
     c.save(); hexPath(1); c.clip();
-    c.strokeStyle='#4ab32b'; c.lineWidth=2; 
-    for(let x=0;x<TSIZE;x+=40){ c.beginPath();c.moveTo(x,0);c.lineTo(x,TSIZE);c.stroke(); }
-    for(let y=0;y<TSIZE;y+=40){ c.beginPath();c.moveTo(0,y);c.lineTo(TSIZE,y);c.stroke(); }
+    c.strokeStyle='#4ab32b'; c.lineWidth=3; 
+    for(let x=0;x<TSIZE;x+=60){ c.beginPath();c.moveTo(x,0);c.lineTo(x,TSIZE);c.stroke(); }
+    for(let y=0;y<TSIZE;y+=60){ c.beginPath();c.moveTo(0,y);c.lineTo(TSIZE,y);c.stroke(); }
     c.restore();
   }
 
@@ -263,24 +260,24 @@ function renderTile(tile) {
     c.strokeStyle=style; c.lineWidth=lineW; c.lineCap='butt'; c.stroke();
   }
 
-  c.save(); hexPath(0.5); c.clip();
+  c.save(); hexPath(1); c.clip();
   
   if (tile.isOverpass) {
-    c.shadowColor = 'rgba(0,30,60,0.7)'; c.shadowBlur = 30; c.shadowOffsetY = 20;
-    drawRoadBez(ROAD_W+24, '#999'); 
+    c.shadowColor = 'rgba(0,30,60,0.8)'; c.shadowBlur = 40; c.shadowOffsetY = 25;
+    drawRoadBez(ROAD_W+30, '#999'); 
     c.shadowColor = 'transparent';
-    drawRoadBez(ROAD_W+8, '#333');  
+    drawRoadBez(ROAD_W+10, '#333');  
   } else {
-    drawRoadBez(ROAD_W+12, '#222');  
+    drawRoadBez(ROAD_W+16, '#222');  
   }
   
   drawRoadBez(ROAD_W, '#444');     
   drawRoadBez(ROAD_W*0.4, '#505050'); 
 
-  c.setLineDash([20,16]);
+  c.setLineDash([30, 24]);
   c.beginPath(); c.moveTo(bz.p0.x, bz.p0.y);
   c.bezierCurveTo(bz.cp1.x,bz.cp1.y, bz.cp2.x,bz.cp2.y, bz.p3.x,bz.p3.y);
-  c.strokeStyle='rgba(255,255,255,0.7)'; c.lineWidth=4; c.stroke();
+  c.strokeStyle='rgba(255,255,255,0.7)'; c.lineWidth=6; c.stroke();
   c.setLineDash([]);
   c.restore();
 
@@ -289,9 +286,9 @@ function renderTile(tile) {
     const outA  = edgeAngle(edgeIdx);
     const perpA = outA - Math.PI/2;
     const hw    = ROAD_W*0.5;
-    const n     = 8;
+    const n     = 10;
     const sw    = (hw*2)/n;
-    const depth = 16;
+    const depth = 24;
     for (let s=0; s<n; s++) {
       const t = -hw + sw*s + sw*0.5;
       const bx = mid.x + Math.cos(perpA)*t;
@@ -311,7 +308,7 @@ function renderTile(tile) {
     const hw = ROAD_W*0.5;
     c.beginPath(); c.moveTo(mid.x+Math.cos(perpA)*hw, mid.y+Math.sin(perpA)*hw);
     c.lineTo(mid.x-Math.cos(perpA)*hw, mid.y-Math.sin(perpA)*hw);
-    c.strokeStyle='#00ff00'; c.lineWidth=8; c.stroke();
+    c.strokeStyle='#00ff00'; c.lineWidth=12; c.stroke();
   }
 
   if (tile.isFinish) {
@@ -320,7 +317,7 @@ function renderTile(tile) {
     const hw = ROAD_W*0.5;
     c.beginPath(); c.moveTo(mid.x+Math.cos(perpA)*hw, mid.y+Math.sin(perpA)*hw);
     c.lineTo(mid.x-Math.cos(perpA)*hw, mid.y-Math.sin(perpA)*hw);
-    c.strokeStyle='#ffff00'; c.lineWidth=8; c.stroke();
+    c.strokeStyle='#ffff00'; c.lineWidth=12; c.stroke();
   }
 
   tCache.set(ck, oc);
@@ -334,7 +331,6 @@ let tiles=[], car={}, cam={};
 let state='menu', raceStart=0, raceTime=0, bestTime=null;
 let finished=false;
 
-// Gombkezelés teljesen átdolgozva a tökéletes mobilos élményért
 function mkBtn(id) {
   const el = document.getElementById(id);
   const s = { v:false };
@@ -387,7 +383,7 @@ function resetGame() {
     speed:0, trail:[], falling:false, fallAlpha:1, 
     tIdx: 0, onHex:true, onRoad:true 
   };
-  cam = { x:car.x, y:car.y, zoom:0.75 }; // <--- SOKKAL KÖZELEBBI KAMERA
+  cam = { x:car.x, y:car.y, zoom:0.55 }; // Távolabbi nézet az óriási pályához
   raceStart=0; raceTime=0; finished=false;
   updHUD(0);
 }
@@ -432,36 +428,55 @@ function update(ts) {
   car.x += Math.cos(car.angle)*car.speed*dt;
   car.y += Math.sin(car.angle)*car.speed*dt;
 
-  // --- GLOBÁLIS POZÍCIÓ ELLENŐRZÉS (Hogy ne ess le a fűben) ---
-  let bestDistCenter = Infinity;
+  // ─────────────────────────────────────────────────────
+  //  HÍD ÉS POZÍCIÓ LOGIKA JAVÍTVA
+  // ─────────────────────────────────────────────────────
+  let candidates = [];
+  for (let i = 0; i < tiles.length; i++) {
+    if (inHex(car.x, car.y, tiles[i].cx, tiles[i].cy)) {
+      candidates.push(i);
+    }
+  }
+
   let newIdx = car.tIdx;
   let foundHex = false;
   let bestRoadDist = Infinity;
 
-  // Végignézzük az ÖSSZES hexát, így bárhol vágsz át a füvön, életben maradsz
-  for (let i = 0; i < tiles.length; i++) {
-    const t = tiles[i];
-    if (inHex(car.x, car.y, t.cx, t.cy)) {
-      foundHex = true;
-      const distC = Math.hypot(car.x - t.cx, car.y - t.cy);
-      if (distC < bestDistCenter) {
-        bestDistCenter = distC;
-        newIdx = i;
-        bestRoadDist = distToRoadCenter(car.x, car.y, t);
-      }
+  if (candidates.length > 0) {
+    foundHex = true;
+
+    // Ha egyszerre lennénk az alagútban (1) és a hídon (7) - ami azonos hely
+    if (candidates.includes(1) && candidates.includes(7)) {
+       // Ha a felüljárón (7), az oda vezető (6), vagy onnan lehozó (8) szakaszon vagyunk:
+       if ([6, 7, 8].includes(car.tIdx)) {
+          candidates = candidates.filter(c => c !== 1); // Zárjuk ki az alagutat
+       } else {
+          candidates = candidates.filter(c => c !== 7); // Zárjuk ki a hidat
+       }
     }
+
+    // Válaszuk azt a hexát a jelöltek közül, amelyiknek az útjához közelebb vagyunk
+    let minRD = Infinity;
+    for (let c of candidates) {
+        let rd = distToRoadCenter(car.x, car.y, tiles[c]);
+        // Bónusz: Preferáljuk, ahol eddig is voltunk, vagy a következőt a sorban
+        if (c === car.tIdx) rd -= 100; 
+        if (c === (car.tIdx + 1) % tiles.length) rd -= 50; 
+        
+        if (rd < minRD) {
+            minRD = rd;
+            newIdx = c;
+        }
+    }
+    bestRoadDist = distToRoadCenter(car.x, car.y, tiles[newIdx]);
   }
 
-  // Híd leesés mechanika javítva
-  if (car.tIdx === 7 && bestRoadDist > ROAD_W/2 + 5) {
-    if (inHex(car.x, car.y, tiles[1].cx, tiles[1].cy)) {
-      newIdx = 1; 
-      bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]);
-      car.speed *= 0.6; 
-      doFlash('LEESTÉL A HÍDRÓL!');
-    } else {
-      foundHex = false;
-    }
+  // Leesés mechanika: Ha a hídon (7) vagyunk, de nagyon letértünk az útról -> Zuhanás az alagútba (1)
+  if (newIdx === 7 && bestRoadDist > ROAD_W/2 + 5) {
+    newIdx = 1;
+    bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]);
+    car.speed *= 0.5; // Zuhanástól lassul
+    doFlash('LEESTÉL A HÍDRÓL!');
   }
 
   car.tIdx = newIdx;
@@ -476,7 +491,7 @@ function update(ts) {
 
   if (car.speed>5) {
     car.trail.push({x:car.x,y:car.y});
-    if(car.trail.length>120) car.trail.shift();
+    if(car.trail.length>160) car.trail.shift();
   }
 
   if (raceStart===0 && car.speed>5) raceStart=ts;
@@ -495,13 +510,12 @@ function update(ts) {
     }
   }
 
-  const ahead = 100+car.speed*0.15;
+  const ahead = 140+car.speed*0.2;
   const tx=car.x+Math.cos(car.angle)*ahead, ty=car.y+Math.sin(car.angle)*ahead;
   cam.x += (tx-cam.x)*0.08;
   cam.y += (ty-cam.y)*0.08;
   
-  // Kamera Zoom kiszámítása: Nagyobb érték = közelebbi kamera
-  const targetZoom = car.falling ? 0.8 : (car.onRoad ? 0.7 - (car.speed/MAX_ROAD)*0.15 : 0.65);
+  const targetZoom = car.falling ? 0.6 : (car.onRoad ? 0.55 - (car.speed/MAX_ROAD)*0.15 : 0.5);
   cam.zoom += (targetZoom - cam.zoom) * 0.05;
 
   updHUD();
@@ -525,7 +539,7 @@ function drawTileGlow(sx, sy, s) {
   }
   ctx.closePath();
   ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)'; 
-  ctx.lineWidth = 10; ctx.stroke();
+  ctx.lineWidth = 14; ctx.stroke();
   ctx.restore();
 }
 
@@ -572,7 +586,7 @@ function drawTrail() {
     const pb=w2s(car.trail[i].x, car.trail[i].y);
     ctx.moveTo(pa.sx,pa.sy); ctx.lineTo(pb.sx,pb.sy);
   }
-  ctx.strokeStyle=`rgba(255,50,0,0.5)`; ctx.lineWidth=3*cam.zoom; ctx.lineCap='round'; ctx.stroke();
+  ctx.strokeStyle=`rgba(255,50,0,0.5)`; ctx.lineWidth=4*cam.zoom; ctx.lineCap='round'; ctx.stroke();
 }
 
 function drawCar() {
@@ -583,7 +597,7 @@ function drawCar() {
   ctx.translate(sx,sy); ctx.rotate(car.angle+Math.PI/2); ctx.scale(s,s);
 
   const L=CAR_L, W=CAR_W;
-  ctx.save(); ctx.translate(4,4); ctx.globalAlpha*=0.4;
+  ctx.save(); ctx.translate(5,5); ctx.globalAlpha*=0.4;
   ctx.fillStyle='#000'; ctx.beginPath();
   ctx.roundRect(-W/2,-L/2,W,L,[W*0.4,W*0.4,W*0.2,W*0.2]); ctx.fill();
   ctx.restore();
