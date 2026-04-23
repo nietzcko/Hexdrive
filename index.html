@@ -117,7 +117,7 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 </div>
 
 <div id="lvlSel">
-  <div style="position:absolute; top:16px; right:20px; color:rgba(0, 255, 255, 0.6); font-size:14px; font-weight:bold; letter-spacing:2px; z-index:110;">v2.1.0</div>
+  <div style="position:absolute; top:16px; right:20px; color:rgba(0, 255, 255, 0.6); font-size:14px; font-weight:bold; letter-spacing:2px; z-index:110;">v2.1.1</div>
   <h1 style="text-align:center; color:#fff; font-size:clamp(30px,8vw,60px); letter-spacing:8px; text-shadow:0 0 20px #00ffff; margin-bottom:10px;">HEX RACER</h1>
   <p style="color:#a0d8f1; font-size:14px; letter-spacing:1px; text-align:center; margin-bottom:40px; max-width:600px; line-height:1.6;">
     Reach the Gold time (<span style="color:#ffcc00; font-weight:bold;">05:00.000</span>) to unlock the next level!<br>
@@ -307,7 +307,7 @@ function buildTrack() {
 //  ROAD BEZIER
 // ─────────────────────────────────────────────────────
 function tileBezier(tile) {
-  const p0 = edgeMid(tile.cx, tile.cy, tile.entry);
+  const p0 = edgeMid(tile.cx, cy, tile.entry);
   const p3 = edgeMid(tile.cx, tile.cy, tile.exit);
   const cp1 = { x: tile.cx*0.5 + p0.x*0.5, y: tile.cy*0.5 + p0.y*0.5 };
   const cp2 = { x: tile.cx*0.5 + p3.x*0.5, y: tile.cy*0.5 + p3.y*0.5 };
@@ -333,7 +333,6 @@ function distToRoadCenter(px, py, tile) {
   return best;
 }
 
-// Added larger tolerance so corner-cutting on grass doesn't instantly kill
 function inHex(px, py, cx, cy) {
   for (let e=0; e<6; e++) {
     const a = edgeAngle(e);
@@ -627,12 +626,13 @@ function update(ts) {
     foundHex = true;
     let isHigh = checkHighUp(car.tIdx);
     
-    // Maintain level (upper vs lower layers)
-    if (isHigh) {
-        candidates = candidates.filter(c => checkHighUp(c));
-    } else {
-        candidates = candidates.filter(c => !tiles[c].isOverpass); 
-    }
+    // JAVÍTÁS: Mindig megtartjuk a jelenlegi, az előző és a következő csempét a jelöltek között.
+    // Ezzel kiküszöböljük azt a hibát, amikor a magaslati rámpáról lejövünk a sima útra.
+    candidates = candidates.filter(c => {
+        if (c === car.tIdx || c === car.tIdx + 1 || c === car.tIdx - 1) return true;
+        if (isHigh) return checkHighUp(c);
+        return !tiles[c].isOverpass;
+    });
 
     if (candidates.length === 0) candidates = [car.tIdx];
 
@@ -657,7 +657,6 @@ function update(ts) {
       let maxAllowedDist = (currentTile.isNarrow ? ROAD_W * 0.45 : ROAD_W) / 2;
       car.onRoad = bestRoadDist <= maxAllowedDist + 5;
 
-      // BRIDGE GUARDRAIL COLLISION
       if (currentTile.isOverpass && bestRoadDist > maxAllowedDist - 8) {
           car.x -= Math.cos(car.angle) * car.speed * dt * 1.5;
           car.y -= Math.sin(car.angle) * car.speed * dt * 1.5;
@@ -666,7 +665,6 @@ function update(ts) {
           doFlash('GUARDRAIL!', '#ffaa00');
           car.onRoad = true; 
       } 
-      // FALL OFF WORLD BOUNDARY
       else if (!car.onHex) { 
           car.falling = true; 
           car.fallAlpha = 1; 
@@ -674,7 +672,6 @@ function update(ts) {
           car.skidMarks = []; 
           doFlash('OFF TRACK!', '#ff3366');
       }
-      // FALL OFF RAMP SIDE (with extra tolerance)
       else if (checkHighUp(car.tIdx) && !currentTile.isOverpass && bestRoadDist > maxAllowedDist + 35) {
           car.falling = true; 
           car.fallAlpha = 1; 
