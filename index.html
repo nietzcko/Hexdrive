@@ -15,19 +15,23 @@ body {
 #hud {
   position: fixed; top: 0; left: 0; right: 0;
   display: grid; grid-template-columns: 1fr auto 1fr;
-  padding: 16px; pointer-events: none; z-index: 10; display: none;
+  padding: 16px 24px; pointer-events: none; z-index: 10; display: none;
 }
 .hud-left { display: flex; justify-content: flex-start; }
-.hud-center { display: flex; justify-content: center; }
+.hud-center { display: flex; justify-content: center; align-items: flex-start; }
 .hud-right { display: flex; justify-content: flex-end; align-items: flex-start; }
 
-.hp {
-  background: rgba(0, 15, 30, 0.85); border: 2px solid rgba(0, 255, 255, 0.4); border-radius: 8px;
-  padding: 8px 14px; font-size: 10px; letter-spacing: 2px; color: #5cd6ff; text-transform: uppercase;
-  backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); min-width: 100px;
+#timeDisplay {
+  display: flex; flex-direction: column; align-items: center; pointer-events: none;
 }
-.hp.center { text-align: center; border-color: rgba(0, 255, 255, 0.8); box-shadow: 0 0 15px rgba(0,255,255,0.2); }
-.hb { font-size: 24px; font-weight: 900; color: #fff; display: block; letter-spacing: 1px; margin-top: 2px; }
+#hT {
+  font-size: clamp(32px, 8vw, 42px); font-weight: 900; color: #fff; letter-spacing: 2px;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.8), 0 0 15px rgba(0,255,255,0.4); margin-bottom: -2px;
+}
+#hPR {
+  font-size: clamp(14px, 4vw, 16px); font-weight: bold; color: #ffcc00; letter-spacing: 1px;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.9);
+}
 
 /* Small square icon buttons */
 .icon-btn {
@@ -108,11 +112,12 @@ body {
 <canvas id="c"></canvas>
 
 <div id="hud">
-  <div class="hud-left">
-      <div class="hp">PR<span class="hb" id="hPR">--:--.---</span></div>
-  </div>
+  <div class="hud-left"></div>
   <div class="hud-center">
-      <div class="hp center">TIME<span class="hb" id="hT">00:00.000</span></div>
+      <div id="timeDisplay">
+          <div id="hT">00:00.000</div>
+          <div id="hPR">PR: --:--.---</div>
+      </div>
   </div>
   <div class="hud-right">
       <div id="btnMenu" class="icon-btn" onclick="initMenu()">☰</div>
@@ -129,7 +134,7 @@ body {
 </div>
 
 <div id="lvlSel">
-  <div style="position:absolute; top:16px; right:20px; color:rgba(0, 255, 255, 0.6); font-size:14px; font-weight:bold; letter-spacing:2px; z-index:110;">v2.3.0</div>
+  <div style="position:absolute; top:16px; right:20px; color:rgba(0, 255, 255, 0.6); font-size:14px; font-weight:bold; letter-spacing:2px; z-index:110;">v2.4.0</div>
   <h1 style="text-align:center; color:#fff; font-size:clamp(30px,8vw,60px); letter-spacing:8px; text-shadow:0 0 20px #00ffff; margin-bottom:10px;">HEX RACER</h1>
   <p style="color:#a0d8f1; font-size:14px; letter-spacing:1px; text-align:center; margin-bottom:40px; max-width:600px; line-height:1.6;">
     Reach the Gold time (<span style="color:#ffcc00; font-weight:bold;">05:00.000</span>) to unlock the next level!<br>
@@ -160,7 +165,7 @@ const MAX_HEX  = 140;
 const ACCEL    = 220;  
 const BRAKE    = 800;  
 const COAST    = 100;  
-const STEER    = 1.5;  // Csökkentve 2.4-ről, hogy kevésbé rántson!
+const STEER    = 1.5;  
 
 const cv  = document.getElementById('c');
 const ctx = cv.getContext('2d');
@@ -172,7 +177,7 @@ const LEVEL_DATA = [
   [[3,0,'S'], [3,0], [3,1], [4,1], [4,1], [4,0], [3,0], [3,0,'F']],
   // Lvl 2: The Snake
   [[3,0,'S'], [3,1], [4,2], [5,1], [4,0], [3,1], [4,2], [5,0], [3,0,'F']],
-  // Lvl 3: The First Bridge (over nothing)
+  // Lvl 3: The First Bridge
   [[3,0,'S'], [3,0], [3,1], [4,1], [4,1], [4,1,'O'], [4,1], [4,2], [5,3], [0,2], [5,1,'F']],
   // Lvl 4: Long Sweepers
   [[4,1,'S'], [4,1], [4,2], [5,2], [5,2], [5,3], [0,3], [0,3], [0,4], [1,4], [1,4], [1,5], [2,5], [2,0], [3,0,'F']],
@@ -261,7 +266,9 @@ function loadLevel(idx) {
     document.getElementById('hud').style.display = 'grid';
     document.getElementById('ctrl').style.display = 'flex';
     document.getElementById('btnRetry').style.display = 'flex';
-    document.getElementById('hPR').textContent = fmt(savedRecords[idx]);
+    
+    let prText = savedRecords[idx] ? fmt(savedRecords[idx]) : '--:--.---';
+    document.getElementById('hPR').textContent = `PR: ${prText}`;
     
     resetGame();
     state = 'racing';
@@ -269,7 +276,7 @@ function loadLevel(idx) {
 }
 
 // ─────────────────────────────────────────────────────
-//  HEX MATH
+//  HEX MATH & GENERATION
 // ─────────────────────────────────────────────────────
 const APOTHEM = R * Math.sqrt(3) / 2;
 function edgeAngle(e) { return Math.PI/3*e + Math.PI/6; }
@@ -284,9 +291,14 @@ function nextCenter(prevExitMidX, prevExitMidY, prevExit) {
   return { x: prevExitMidX - APOTHEM * Math.cos(entryA), y: prevExitMidY - APOTHEM * Math.sin(entryA) };
 }
 
+let trackTiles = [];
+let allTiles = [];
+
 function buildTrack() {
-  const tiles = [];
+  trackTiles = [];
   let cx = 0, cy = 0;
+  let centerMap = new Set();
+  
   for (let i = 0; i < SEQ.length; i++) {
     const s = SEQ[i];
     const tile = {
@@ -296,14 +308,40 @@ function buildTrack() {
       isFinish: s.isFinish || false,
       isOverpass: s.isOverpass || false,
       isNarrow: s.isNarrow || false,
+      isDeco: false,
       visited: false
     };
-    tiles.push(tile);
+    trackTiles.push(tile);
+    centerMap.add(`${Math.round(cx)}_${Math.round(cy)}`);
     const em = edgeMid(cx, cy, tile.exit);
     const nc = nextCenter(em.x, em.y, tile.exit);
     cx = nc.x; cy = nc.y;
   }
-  return tiles;
+  
+  allTiles = [...trackTiles];
+  let decoIdx = 0;
+  // Catan biomes (more meadows to look lush)
+  const biomes = ['meadow', 'meadow', 'wheat', 'stone', 'forest', 'dirt', 'meadow'];
+  
+  // Generate surrounding decorative tiles
+  for (let t of trackTiles) {
+      for (let e = 0; e < 6; e++) {
+          const a = edgeAngle(e);
+          const dist = R * Math.sqrt(3); // Distance to adjacent hex center
+          const acx = t.cx + Math.cos(a) * dist;
+          const acy = t.cy + Math.sin(a) * dist;
+          const key = `${Math.round(acx)}_${Math.round(acy)}`;
+          
+          if (!centerMap.has(key)) {
+              centerMap.add(key);
+              allTiles.push({
+                  idx: 'd'+decoIdx++, cx: acx, cy: acy, key: `D_${decoIdx}`,
+                  isDeco: true, biome: biomes[Math.floor(Math.random()*biomes.length)],
+                  isOverpass: false, visited: true 
+              });
+          }
+      }
+  }
 }
 
 function tileBezier(tile) {
@@ -323,6 +361,7 @@ function bezPt(t, p0, c1, c2, p3) {
 }
 
 function distToRoadCenter(px, py, tile) {
+  if (tile.isDeco) return Infinity; // No road on deco tiles
   const bz = tileBezier(tile);
   let best = Infinity;
   for (let i=0; i<=40; i++) {
@@ -333,7 +372,6 @@ function distToRoadCenter(px, py, tile) {
   return best;
 }
 
-// JAVÍTÁS: Mivel már a kerekek határait nézzük, elég 5 pixel "matek hiba" ráhagyás.
 function inHex(px, py, cx, cy) {
   for (let e=0; e<6; e++) {
     const a = edgeAngle(e);
@@ -343,7 +381,6 @@ function inHex(px, py, cx, cy) {
   return true;
 }
 
-// Physics specific wheel calculator
 function getPhysicsWheels(cx, cy, angle) {
     const fD = CAR_FRONT_AXLE, rD = -CAR_REAR_AXLE;
     const fX = Math.cos(angle)*fD, fY = Math.sin(angle)*fD;
@@ -365,7 +402,7 @@ const TSIZE = Math.ceil(R*2 + 10);
 const tCache = new Map();
 
 function renderTile(tile) {
-  const ck = `${tile.key}_${tile.entry}_${tile.exit}_${tile.isNarrow ? 'N' : 'W'}_${tile.isOverpass ? 'O' : 'G'}`;
+  const ck = `${tile.key}_${tile.entry}_${tile.exit}_${tile.isNarrow ? 'N' : 'W'}_${tile.isOverpass ? 'O' : 'G'}_${tile.biome}`;
   if (tCache.has(ck)) return tCache.get(ck);
 
   const oc = document.createElement('canvas');
@@ -383,6 +420,58 @@ function renderTile(tile) {
     c.closePath();
   }
 
+  // --- CATAN DECO TILE RENDERING ---
+  if (tile.isDeco) {
+      let colors = {
+          'meadow': ['#5cd639', '#4ab32b'], // Grass
+          'wheat':  ['#e6c300', '#cca300'], // Yellow
+          'stone':  ['#8c8c8c', '#666666'], // Gray
+          'forest': ['#226622', '#144014'], // Dark green
+          'dirt':   ['#8b5a2b', '#6b421a']  // Brown
+      };
+      
+      let cBase = colors[tile.biome][0];
+      let cStroke = colors[tile.biome][1];
+
+      hexPath(3); c.fillStyle = cBase; c.fill();
+      c.save(); hexPath(1); c.clip();
+      
+      c.strokeStyle = cStroke; c.lineWidth = 3;
+      // Grid lines
+      for(let x=0;x<TSIZE;x+=60){ c.beginPath();c.moveTo(x,0);c.lineTo(x,TSIZE);c.stroke(); }
+      for(let y=0;y<TSIZE;y+=60){ c.beginPath();c.moveTo(0,y);c.lineTo(TSIZE,y);c.stroke(); }
+      
+      // Deterministic Random for decorations
+      let seed = tile.cx * 13.37 + tile.cy * 42.0; 
+      function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+
+      if (tile.biome === 'forest') {
+          c.fillStyle = '#1a4c1a';
+          for(let i=0; i<18; i++) {
+              let rx = cx + (rnd()-0.5)*R*1.4; let ry = cy + (rnd()-0.5)*R*1.4;
+              c.beginPath(); c.arc(rx, ry, 15 + rnd()*15, 0, Math.PI*2); c.fill();
+          }
+      } else if (tile.biome === 'stone') {
+          c.fillStyle = '#595959';
+          for(let i=0; i<10; i++) {
+              let rx = cx + (rnd()-0.5)*R*1.3; let ry = cy + (rnd()-0.5)*R*1.3;
+              let sz = 25 + rnd()*20;
+              c.beginPath(); c.moveTo(rx, ry-sz); c.lineTo(rx+sz, ry+sz); c.lineTo(rx-sz, ry+sz); c.fill();
+          }
+      } else if (tile.biome === 'wheat') {
+          c.strokeStyle = '#ffdb4d'; c.lineWidth = 4;
+          for(let i=0; i<25; i++) {
+              let rx = cx + (rnd()-0.5)*R*1.4; let ry = cy + (rnd()-0.5)*R*1.4;
+              c.beginPath(); c.moveTo(rx, ry); c.lineTo(rx+8, ry-20); c.stroke();
+          }
+      }
+      
+      c.restore();
+      tCache.set(ck, oc);
+      return oc;
+  }
+
+  // --- TRACK TILE RENDERING ---
   if (!tile.isOverpass) {
     hexPath(3); c.fillStyle='#5cd639'; c.fill(); 
     c.save(); hexPath(1); c.clip();
@@ -478,7 +567,7 @@ function renderTile(tile) {
 // ─────────────────────────────────────────────────────
 //  GAME ENGINE & PHYSICS
 // ─────────────────────────────────────────────────────
-let tiles=[], car={}, cam={};
+let car={}, cam={};
 let state='menu', raceStart=0, raceTime=0;
 let finished=false;
 let isNewRecord=false;
@@ -503,7 +592,7 @@ document.addEventListener('keydown', e=>keys[e.key.toLowerCase()]=true);
 document.addEventListener('keyup',   e=>keys[e.key.toLowerCase()]=false);
 
 function crossedFinish(px, py) {
-  const ft = tiles[tiles.length-1]; 
+  const ft = trackTiles[trackTiles.length-1]; 
   const mid  = edgeMid(ft.cx, ft.cy, ft.exit);
   const outA = edgeAngle(ft.exit);
   const nx = Math.cos(outA), ny = Math.sin(outA);
@@ -517,10 +606,10 @@ function crossedFinish(px, py) {
 
 function resetGame() {
   tCache.clear(); 
-  tiles = buildTrack();
-  totalCPs = tiles.length; 
+  buildTrack();
+  totalCPs = trackTiles.length; 
   
-  const st = tiles[0];
+  const st = trackTiles[0];
   const em = edgeMid(st.cx, st.cy, st.exit);
   const em0= edgeMid(st.cx, st.cy, st.entry);
   
@@ -566,10 +655,15 @@ function getWheelCoords(baseAngle, isSkidding, isHighUp) {
 }
 
 function checkHighUp(idx) {
-    if (!tiles[idx]) return false;
-    if (tiles[idx].isOverpass) return true;
-    if (tiles[idx+1] && tiles[idx+1].isOverpass) return true; 
-    if (tiles[idx-1] && tiles[idx-1].isOverpass) return true; 
+    const tile = allTiles[idx];
+    if (!tile || tile.isDeco) return false;
+    if (tile.isOverpass) return true;
+    
+    let trackIdx = tile.idx; 
+    if (typeof trackIdx === 'number') {
+        if (trackTiles[trackIdx+1] && trackTiles[trackIdx+1].isOverpass) return true; 
+        if (trackIdx > 0 && trackTiles[trackIdx-1] && trackTiles[trackIdx-1].isOverpass) return true; 
+    }
     return false;
 }
 
@@ -603,7 +697,7 @@ function update(ts) {
   const maxSpd = car.onRoad ? MAX_ROAD : MAX_HEX;
   
   if (finished) {
-      car.speed -= 220 * dt; 
+      car.speed -= 100 * dt; // Finom lassulás célba érés után (kigurulás a fűre)
       car.steerVisual *= 0.85; 
   } else {
       if (gas)   car.speed += ACCEL*dt;
@@ -611,7 +705,7 @@ function update(ts) {
       else if (!gas) car.speed -= COAST*dt;
   }
   
-  if (!car.onRoad) car.speed *= (1 - 1.5*dt); // Slower on grass
+  if (!car.onRoad) car.speed *= (1 - 1.5*dt); // Fűben/Mezőn lassulás
   car.speed = Math.max(0, Math.min(maxSpd, car.speed));
 
   const sr = STEER * (0.3 + 0.7*car.speed/MAX_ROAD);
@@ -625,40 +719,47 @@ function update(ts) {
   car.y += Math.sin(car.angle)*car.speed*dt;
 
   let candidates = [];
-  for (let i = 0; i < tiles.length; i++) {
-    if (inHex(car.x, car.y, tiles[i].cx, tiles[i].cy)) candidates.push(i);
+  for (let i = 0; i < allTiles.length; i++) {
+    if (inHex(car.x, car.y, allTiles[i].cx, allTiles[i].cy)) candidates.push(i);
   }
 
   let newIdx = car.tIdx;
   let foundHex = false;
+  let onTrackTile = false;
 
   if (candidates.length > 0) {
     foundHex = true;
-    let isHigh = checkHighUp(car.tIdx);
+    let trackCandidates = candidates.filter(c => !allTiles[c].isDeco);
     
-    candidates = candidates.filter(c => {
-        if (c === car.tIdx || c === car.tIdx + 1 || c === car.tIdx - 1) return true;
-        if (isHigh) return checkHighUp(c);
-        return !tiles[c].isOverpass;
-    });
+    if (trackCandidates.length > 0) {
+        let isHigh = checkHighUp(car.tIdx);
+        trackCandidates = trackCandidates.filter(c => {
+            if (c === car.tIdx || c === car.tIdx + 1 || c === car.tIdx - 1) return true;
+            if (isHigh) return checkHighUp(c);
+            return !allTiles[c].isOverpass;
+        });
 
-    if (candidates.length === 0) candidates = [car.tIdx];
+        if (trackCandidates.length === 0) trackCandidates = [car.tIdx];
 
-    let minCenterRD = Infinity;
-    for (let c of candidates) {
-        let rd = distToRoadCenter(car.x, car.y, tiles[c]);
-        if (c === car.tIdx) rd -= 100; 
-        if (c === (car.tIdx + 1) % tiles.length) rd -= 50; 
-        if (rd < minCenterRD) {
-            minCenterRD = rd;
-            newIdx = c;
+        let minCenterRD = Infinity;
+        for (let c of trackCandidates) {
+            let rd = distToRoadCenter(car.x, car.y, allTiles[c]);
+            if (c === car.tIdx) rd -= 100; 
+            if (c === (car.tIdx + 1) % trackTiles.length) rd -= 50; 
+            if (rd < minCenterRD) {
+                minCenterRD = rd;
+                newIdx = c;
+                onTrackTile = true;
+            }
         }
+    } else {
+        newIdx = candidates[0]; // Csak deco csempén van
     }
   }
 
   car.tIdx = newIdx;
   car.onHex = foundHex;
-  const currentTile = tiles[car.tIdx];
+  const currentTile = allTiles[car.tIdx];
 
   // KEREKENKÉNTI ÜTKÖZÉS VIZSGÁLAT
   const physicsWheels = getPhysicsWheels(car.x, car.y, car.angle);
@@ -667,60 +768,65 @@ function update(ts) {
 
   if (currentTile) {
       for (let w of physicsWheels) {
-          let d = distToRoadCenter(w.x, w.y, currentTile);
-          if (d > maxWheelDist) maxWheelDist = d;
+          if (!currentTile.isDeco) {
+              let d = distToRoadCenter(w.x, w.y, currentTile);
+              if (d > maxWheelDist) maxWheelDist = d;
+          }
           
           let wheelInAnyHex = false;
           for (let c of candidates) { 
-               if (inHex(w.x, w.y, tiles[c].cx, tiles[c].cy)) { wheelInAnyHex = true; break; }
+               if (inHex(w.x, w.y, allTiles[c].cx, allTiles[c].cy)) { wheelInAnyHex = true; break; }
           }
           if (!wheelInAnyHex) {
-              for (let i=0; i<tiles.length; i++) {
-                  if (inHex(w.x, w.y, tiles[i].cx, tiles[i].cy)) { wheelInAnyHex = true; break; }
+              for (let i=0; i<allTiles.length; i++) {
+                  if (inHex(w.x, w.y, allTiles[i].cx, allTiles[i].cy)) { wheelInAnyHex = true; break; }
               }
           }
           if (!wheelInAnyHex) anyWheelOutsideHex = true;
       }
 
-      let maxAllowedDist = (currentTile.isNarrow ? ROAD_W * 0.45 : ROAD_W) / 2;
-      car.onRoad = maxWheelDist <= maxAllowedDist + 5;
+      if (!currentTile.isDeco) {
+          let maxAllowedDist = (currentTile.isNarrow ? ROAD_W * 0.45 : ROAD_W) / 2;
+          car.onRoad = maxWheelDist <= maxAllowedDist + 5;
 
-      // Szalagkorlát
-      if (currentTile.isOverpass && maxWheelDist > maxAllowedDist - 8) {
-          car.x -= Math.cos(car.angle) * car.speed * dt * 1.5;
-          car.y -= Math.sin(car.angle) * car.speed * dt * 1.5;
-          car.speed *= 0.5;
-          maxWheelDist = maxAllowedDist - 8;
-          if (!finished) doFlash('GUARDRAIL!', '#ffaa00');
-          car.onRoad = true; 
-      } 
-      // Lezuhanás a semmibe
-      else if (!car.onHex || anyWheelOutsideHex) { 
-          if (!finished) {
-              car.falling = true; 
-              car.fallAlpha = 1; 
-              car.trail = []; 
-              car.skidMarks = []; 
-              doFlash('OFF TRACK!', '#ff3366');
+          // Szalagkorlát a hídon
+          if (currentTile.isOverpass && maxWheelDist > maxAllowedDist - 8) {
+              car.x -= Math.cos(car.angle) * car.speed * dt * 1.5;
+              car.y -= Math.sin(car.angle) * car.speed * dt * 1.5;
+              car.speed *= 0.5;
+              maxWheelDist = maxAllowedDist - 8;
+              if (!finished) doFlash('GUARDRAIL!', '#ffaa00');
+              car.onRoad = true; 
+          } 
+          // Lezuhanás rámpáról
+          else if (checkHighUp(car.tIdx) && !currentTile.isOverpass && maxWheelDist > maxAllowedDist + 5) {
+              if (!finished) {
+                  car.falling = true; 
+                  car.fallAlpha = 1; 
+                  car.trail = []; 
+                  car.skidMarks = []; 
+                  doFlash('FELL OFF RAMP!', '#ff3366');
+              }
           }
+      } else {
+          car.onRoad = false; // Deco csempéken mindig csak fű-fizika van
       }
-      // Lezuhanás rámpáról
-      else if (checkHighUp(car.tIdx) && !currentTile.isOverpass && maxWheelDist > maxAllowedDist + 5) {
-          if (!finished) {
-              car.falling = true; 
-              car.fallAlpha = 1; 
-              car.trail = []; 
-              car.skidMarks = []; 
-              doFlash('FELL OFF RAMP!', '#ff3366');
-          }
+
+      // Lezuhanás a semmibe (ha nincs alatta semmilyen hexa csempe)
+      if (!finished && (!car.onHex || anyWheelOutsideHex)) { 
+          car.falling = true; 
+          car.fallAlpha = 1; 
+          car.trail = []; 
+          car.skidMarks = []; 
+          doFlash('OFF TRACK!', '#ff3366');
       }
   }
 
-  if (car.onRoad && !car.falling && !finished && currentTile) {
+  // Szektor érintés (Csak úton és csak track csempén)
+  if (car.onRoad && !car.falling && !finished && currentTile && !currentTile.isDeco) {
     if (!currentTile.visited) {
       currentTile.visited = true;
       car.cpsHit++;
-      doFlash(`SECTOR ${car.cpsHit}/${totalCPs}`, '#00ffff');
     }
   }
 
@@ -737,6 +843,7 @@ function update(ts) {
   if (raceStart===0 && car.speed>5) raceStart=ts;
   if (raceStart>0 && !finished) raceTime=ts-raceStart;
 
+  // CÉLBA ÉRÉS LOGIKA
   if (!car.falling && !finished && crossedFinish(px,py)) {
     if (car.cpsHit >= totalCPs) {
       finished = true;
@@ -839,27 +946,27 @@ function drawScene() {
   const isHighUp = checkHighUp(car.tIdx);
 
   // LOWER LAYER
-  for (const t of tiles) {
+  for (const t of allTiles) {
     if (t.isOverpass) continue;
     const {sx,sy}=w2s(t.cx,t.cy);
     if(sx<-half*s*2||sx>cv.width+half*s*2||sy<-half*s*2||sy>cv.height+half*s*2) continue;
     ctx.save(); ctx.translate(sx,sy); ctx.scale(s,s);
     ctx.drawImage(renderTile(t),-half,-half);
     ctx.restore();
-    if (t.visited) drawTileGlow(sx, sy, s); 
+    if (t.visited && !t.isDeco) drawTileGlow(sx, sy, s); 
   }
   drawSkidMarks(false); 
   if(car.trail.length>1 && !car.falling) drawTrail(false);
   if (!isHighUp) drawCar();
 
   // UPPER LAYER
-  for (const t of tiles) {
+  for (const t of allTiles) {
     if (!t.isOverpass) continue;
     const {sx,sy}=w2s(t.cx,t.cy);
     ctx.save(); ctx.translate(sx,sy); ctx.scale(s,s);
     ctx.drawImage(renderTile(t),-half,-half);
     ctx.restore();
-    if (t.visited) drawTileGlow(sx, sy, s);
+    if (t.visited && !t.isDeco) drawTileGlow(sx, sy, s);
   }
   drawSkidMarks(true); 
   if(car.trail.length>1 && !car.falling) drawTrail(true);
@@ -898,9 +1005,7 @@ function drawF1Wheels(wheelCoords, s) {
 function drawCar() {
   const {sx,sy}=w2s(car.x,car.y);
   const s=cam.zoom;
-  const isHighUp = checkHighUp(car.tIdx);
   
-  // Látványhoz külön lekérjük a kerekeket, a fizika már futott
   const visualWheels = {
       fl: { x: car.x + Math.cos(car.angle)*CAR_FRONT_AXLE + Math.cos(car.angle+Math.PI/2)*CAR_FRONT_TRACK/2, y: car.y + Math.sin(car.angle)*CAR_FRONT_AXLE + Math.sin(car.angle+Math.PI/2)*CAR_FRONT_TRACK/2, rot: car.angle + car.steerVisual },
       fr: { x: car.x + Math.cos(car.angle)*CAR_FRONT_AXLE - Math.cos(car.angle+Math.PI/2)*CAR_FRONT_TRACK/2, y: car.y + Math.sin(car.angle)*CAR_FRONT_AXLE - Math.sin(car.angle+Math.PI/2)*CAR_FRONT_TRACK/2, rot: car.angle + car.steerVisual },
