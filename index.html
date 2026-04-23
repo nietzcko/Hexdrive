@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>HEX RACER - TRACKMANIA EDITION</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { 
+  background:#04060a; overflow:hidden; width:100vw; height:100vh; font-family:'Courier New',monospace; color:#e0f4ff; 
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none;
+}
+#c { display:block; position:fixed; inset:0; width:100%; height:100%; touch-action:none; }
+
+#hud {
+position:fixed; top:0; left:0; right:0;
+display:flex; justify-content:space-between;
+padding:16px; pointer-events:none; z-index:10;
+}
+.hp {
+background:rgba(0, 15, 30, 0.85); border:2px solid rgba(0, 255, 255, 0.4); border-radius:8px;
+padding:8px 14px; font-size:10px; letter-spacing:2px; color:#5cd6ff; text-transform:uppercase;
+backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.hb { font-size:24px; font-weight:900; color:#fff; display:block; letter-spacing:1px; margin-top:2px; }
+
+#ctrl {
+position:fixed; bottom:0; left:0; right:0; height:120px;
+display:flex; align-items:center; justify-content:space-between;
+padding:0 24px 20px;
+background:linear-gradient(to top, rgba(0, 30, 60, 0.8) 20%, transparent);
+z-index:10; gap:16px; pointer-events:none;
+}
+.cb {
+flex:1; max-width:220px; height:80px; pointer-events:auto; touch-action: none;
+background:rgba(0, 20, 50, 0.85); border:3px solid rgba(0, 255, 255, 0.3); border-radius:18px;
+display:flex; align-items:center; justify-content:center;
+font-size:36px; color:rgba(0, 255, 255, 0.5); cursor:pointer;
+transition:all .1s; -webkit-tap-highlight-color:transparent;
+box-shadow: 0 8px 16px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,255,255,0.1);
+}
+.cb.on { 
+  background:rgba(0, 100, 255, 0.9); border-color:#fff; color:#fff; 
+  box-shadow:0 0 24px rgba(0,255,255,0.6), inset 0 0 15px rgba(255,255,255,0.5); transform:scale(0.96);
+}
+.cb span { pointer-events:none; }
+
+.ob {
+font-size:14px; font-weight:900; letter-spacing:3px; padding:12px 24px;
+background:rgba(0, 20, 40, 0.9); border:2px solid #00cfff; color:#fff;
+border-radius:6px; cursor:pointer; font-family:'Courier New',monospace; transition:all .15s;
+pointer-events:auto; text-transform:uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+touch-action: none; -webkit-tap-highlight-color:transparent;
+}
+.ob:hover,.ob:active { background:#00cfff; color:#000; box-shadow: 0 0 20px #00cfff; }
+
+#ov {
+position:fixed; inset:0; background:rgba(0, 10, 25, 0.95);
+display:flex; flex-direction:column; align-items:center; justify-content:center;
+gap:18px; z-index:20; backdrop-filter: blur(8px); touch-action: none;
+}
+#ov h1 { font-size:clamp(36px,10vw,80px); font-weight:900; letter-spacing:12px; color:#fff; text-shadow:0 0 30px #00cfff, 0 0 10px #00cfff; margin-bottom:10px;}
+#ov p  { color:#a0d8f1; font-size:13px; letter-spacing:2px; text-align:center; line-height:2.2; }
+
+#fl {
+position:fixed; top:30%; left:50%; transform:translate(-50%,-50%);
+font-size:clamp(20px,6vw,46px); font-weight:900; letter-spacing:4px; text-align:center;
+color:#ff3366; text-shadow:0 0 20px #ff3366, 0 4px 10px rgba(0,0,0,0.8);
+pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
+}
+
+#rstBtn { position:fixed; top:16px; right:16px; z-index:50; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<button class="ob" id="rstBtn">RESET</button>
+
+<div id="hud">
+  <div class="hp">Idő<span class="hb" id="hT">00:00.000</span></div>
+  <div class="hp" style="text-align:right">Sebesség<span class="hb" id="hS">0</span></div>
+</div>
+<div id="fl"></div>
+
+<div id="ctrl">
+  <div class="cb" id="bL"><span>◀</span></div>
+  <div class="cb" id="bR"><span>▶</span></div>
+</div>
+
+<div id="ov">
+  <h1>TRACKMANIA</h1>
+  <p>◀ Gáz + Balra &nbsp;|&nbsp; ▶ Gáz + Jobbra<br>Mindkettő felenged: Fék<br>Billentyű: A / D / W</p>
+  <p style="color:#ffcc00; font-weight:bold;">Érints meg minden hexát a cél előtt!</p>
+  <p id="bst" style="color:#ffe44d;font-size:14px;letter-spacing:2px;min-height:14px;font-weight:bold"></p>
+  <button class="ob" id="sBtn" style="margin-top:10px; padding:16px 40px; font-size:20px;">START</button>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────
+//  CONFIG 
+// ─────────────────────────────────────────────────────
+const R       = 260;   
+const ROAD_W  = 120;   
+const CAR_L   = 34;    
+const CAR_W   = 16;
+
+const MAX_ROAD = 650;  
+const MAX_HEX  = 200;  
+const ACCEL    = 350;
+const BRAKE    = 900;  
+const COAST    = 150;
+const STEER    = 2.4;  
+
+const cv  = document.getElementById('c');
+const ctx = cv.getContext('2d');
+function rsz(){ cv.width=innerWidth; cv.height=innerHeight; }
+rsz(); window.addEventListener('resize', rsz);
+
+// ─────────────────────────────────────────────────────
+//  HEX MATH
+// ─────────────────────────────────────────────────────
+const APOTHEM = R * Math.sqrt(3) / 2;
+function edgeAngle(e) { return Math.PI/3*e + Math.PI/6; }
+function edgeMid(cx, cy, e) {
+  const a = edgeAngle(e);
+  return { x: cx + APOTHEM*Math.cos(a), y: cy + APOTHEM*Math.sin(a) };
+}
+function oppEdge(e) { return (e+3)%6; }
+
+function nextCenter(prevExitMidX, prevExitMidY, prevExit) {
+  const entryA = edgeAngle(oppEdge(prevExit)); 
+  return {
+    x: prevExitMidX - APOTHEM * Math.cos(entryA),
+    y: prevExitMidY - APOTHEM * Math.sin(entryA),
+  };
+}
+
+// ─────────────────────────────────────────────────────
+//  PÁLYA SZEKVENCIA
+// ─────────────────────────────────────────────────────
+const SEQ = [
+  { entry: 4, exit: 0, isStart: true },    
+  { entry: 3, exit: 1 },                   
+  { entry: 4, exit: 2 },                   
+  { entry: 5, exit: 3 },                   
+  { entry: 0, exit: 4 },                   
+  { entry: 1, exit: 0 },                   
+  { entry: 3, exit: 5 },                   
+  { entry: 2, exit: 5, isOverpass: true }, 
+  { entry: 2, exit: 4 },                   
+  { entry: 1, exit: 3 },                   
+  { entry: 0, exit: 2 },                   
+  { entry: 5, exit: 1, isFinish: true }    
+];
+
+function buildTrack() {
+  const tiles = [];
+  let cx = 0, cy = 0;
+  for (let i = 0; i < SEQ.length; i++) {
+    const s = SEQ[i];
+    const tile = {
+      idx: i, cx, cy, key: `T_${i}`,
+      entry: s.entry, exit: s.exit,
+      isStart: s.isStart || false,
+      isFinish: s.isFinish || false,
+      isOverpass: s.isOverpass || false,
+      visited: false
+    };
+    tiles.push(tile);
+    const em = edgeMid(cx, cy, tile.exit);
+    const nc = nextCenter(em.x, em.y, tile.exit);
+    cx = nc.x; cy = nc.y;
+  }
+  return tiles;
+}
+
+// ─────────────────────────────────────────────────────
+//  ÚTVONAL BEZIER
+// ─────────────────────────────────────────────────────
+function tileBezier(tile) {
+  const p0 = edgeMid(tile.cx, tile.cy, tile.entry);
+  const p3 = edgeMid(tile.cx, tile.cy, tile.exit);
+  const cp1 = { x: tile.cx*0.5 + p0.x*0.5, y: tile.cy*0.5 + p0.y*0.5 };
+  const cp2 = { x: tile.cx*0.5 + p3.x*0.5, y: tile.cy*0.5 + p3.y*0.5 };
+  return { p0, cp1, cp2, p3 };
+}
+
+function bezPt(t, p0, c1, c2, p3) {
+  const u = 1-t;
+  return {
+    x: u*u*u*p0.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*p3.x,
+    y: u*u*u*p0.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*p3.y,
+  };
+}
+
+function distToRoadCenter(px, py, tile) {
+  const bz = tileBezier(tile);
+  let best = Infinity;
+  for (let i=0; i<=30; i++) {
+    const pt = bezPt(i/30, bz.p0, bz.cp1, bz.cp2, bz.p3);
+    const d  = Math.hypot(px-pt.x, py-pt.y);
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+// Toleránsabb inHex függvény, hogy a fűben átsodródáskor se ess le a semmibe
+function inHex(px, py, cx, cy) {
+  for (let e=0; e<6; e++) {
+    const a = edgeAngle(e);
+    const mid = edgeMid(cx, cy, e);
+    // Megengedünk 3 pixel "kilógást", hogy biztosan érzékelje az átmenetet
+    if ((px-mid.x)*Math.cos(a) + (py-mid.y)*Math.sin(a) > 3.0) return false;
+  }
+  return true;
+}
+
+// ─────────────────────────────────────────────────────
+//  RENDERING
+// ─────────────────────────────────────────────────────
+const TSIZE = Math.ceil(R*2 + 6);
+const tCache = new Map();
+
+function renderTile(tile) {
+  const ck = `${tile.key}_${tile.entry}_${tile.exit}`;
+  if (tCache.has(ck)) return tCache.get(ck);
+
+  const oc = document.createElement('canvas');
+  oc.width = oc.height = TSIZE;
+  const c = oc.getContext('2d');
+  const cx = TSIZE/2, cy = TSIZE/2;
+
+  // hexPath-nak most átadhatunk extra pixeleket az átfedéshez (padding)
+  function hexPath(padding = 0) {
+    c.beginPath();
+    for (let i=0; i<6; i++) {
+      const a = Math.PI/3*i;
+      const rExt = R + padding;
+      i===0 ? c.moveTo(cx+rExt*Math.cos(a), cy+rExt*Math.sin(a))
+            : c.lineTo(cx+rExt*Math.cos(a), cy+rExt*Math.sin(a));
+    }
+    c.closePath();
+  }
+
+  // Fű háttér - 2.5 pixellel túllóg, így nincs rés a csempék között!
+  if (!tile.isOverpass) {
+    hexPath(2.5); c.fillStyle='#5cd639'; c.fill(); 
+    c.save(); hexPath(1); c.clip();
+    c.strokeStyle='#4ab32b'; c.lineWidth=2; 
+    for(let x=0;x<TSIZE;x+=40){ c.beginPath();c.moveTo(x,0);c.lineTo(x,TSIZE);c.stroke(); }
+    for(let y=0;y<TSIZE;y+=40){ c.beginPath();c.moveTo(0,y);c.lineTo(TSIZE,y);c.stroke(); }
+    c.restore();
+  }
+
+  const bz = { p0: edgeMid(cx, cy, tile.entry), p3: edgeMid(cx, cy, tile.exit) };
+  bz.cp1 = { x:cx*0.5+bz.p0.x*0.5, y:cy*0.5+bz.p0.y*0.5 };
+  bz.cp2 = { x:cx*0.5+bz.p3.x*0.5, y:cy*0.5+bz.p3.y*0.5 };
+
+  function drawRoadBez(lineW, style) {
+    c.beginPath(); c.moveTo(bz.p0.x, bz.p0.y);
+    c.bezierCurveTo(bz.cp1.x,bz.cp1.y, bz.cp2.x,bz.cp2.y, bz.p3.x,bz.p3.y);
+    c.strokeStyle=style; c.lineWidth=lineW; c.lineCap='butt'; c.stroke();
+  }
+
+  c.save(); hexPath(0.5); c.clip();
+  
+  if (tile.isOverpass) {
+    c.shadowColor = 'rgba(0,30,60,0.7)'; c.shadowBlur = 30; c.shadowOffsetY = 20;
+    drawRoadBez(ROAD_W+24, '#999'); 
+    c.shadowColor = 'transparent';
+    drawRoadBez(ROAD_W+8, '#333');  
+  } else {
+    drawRoadBez(ROAD_W+12, '#222');  
+  }
+  
+  drawRoadBez(ROAD_W, '#444');     
+  drawRoadBez(ROAD_W*0.4, '#505050'); 
+
+  c.setLineDash([20,16]);
+  c.beginPath(); c.moveTo(bz.p0.x, bz.p0.y);
+  c.bezierCurveTo(bz.cp1.x,bz.cp1.y, bz.cp2.x,bz.cp2.y, bz.p3.x,bz.p3.y);
+  c.strokeStyle='rgba(255,255,255,0.7)'; c.lineWidth=4; c.stroke();
+  c.setLineDash([]);
+  c.restore();
+
+  function kerb(edgeIdx) {
+    const mid   = edgeMid(cx, cy, edgeIdx);
+    const outA  = edgeAngle(edgeIdx);
+    const perpA = outA - Math.PI/2;
+    const hw    = ROAD_W*0.5;
+    const n     = 8;
+    const sw    = (hw*2)/n;
+    const depth = 16;
+    for (let s=0; s<n; s++) {
+      const t = -hw + sw*s + sw*0.5;
+      const bx = mid.x + Math.cos(perpA)*t;
+      const by = mid.y + Math.sin(perpA)*t;
+      c.save(); c.translate(bx,by); c.rotate(outA);
+      c.fillStyle = s%2===0 ? '#ff0033' : '#ffffff';
+      c.fillRect(-sw*0.48, -depth/2, sw*0.96, depth);
+      c.restore();
+    }
+  }
+  kerb(tile.entry);
+  kerb(tile.exit);
+
+  if (tile.isStart) {
+    const mid = edgeMid(cx, cy, tile.entry);
+    const perpA = edgeAngle(tile.entry) - Math.PI/2;
+    const hw = ROAD_W*0.5;
+    c.beginPath(); c.moveTo(mid.x+Math.cos(perpA)*hw, mid.y+Math.sin(perpA)*hw);
+    c.lineTo(mid.x-Math.cos(perpA)*hw, mid.y-Math.sin(perpA)*hw);
+    c.strokeStyle='#00ff00'; c.lineWidth=8; c.stroke();
+  }
+
+  if (tile.isFinish) {
+    const mid = edgeMid(cx, cy, tile.exit);
+    const perpA = edgeAngle(tile.exit) - Math.PI/2;
+    const hw = ROAD_W*0.5;
+    c.beginPath(); c.moveTo(mid.x+Math.cos(perpA)*hw, mid.y+Math.sin(perpA)*hw);
+    c.lineTo(mid.x-Math.cos(perpA)*hw, mid.y-Math.sin(perpA)*hw);
+    c.strokeStyle='#ffff00'; c.lineWidth=8; c.stroke();
+  }
+
+  tCache.set(ck, oc);
+  return oc;
+}
+
+// ─────────────────────────────────────────────────────
+//  JÁTÉK MOTOR & FIZIKA
+// ─────────────────────────────────────────────────────
+let tiles=[], car={}, cam={};
+let state='menu', raceStart=0, raceTime=0, bestTime=null;
+let finished=false;
+
+// Gombkezelés teljesen átdolgozva a tökéletes mobilos élményért
+function mkBtn(id) {
+  const el = document.getElementById(id);
+  const s = { v:false };
+  
+  const press = (e) => { 
+    if(e.cancelable) e.preventDefault(); 
+    e.stopPropagation();
+    s.v=true; el.classList.add('on'); 
+  };
+  const release = (e) => { 
+    if(e.cancelable) e.preventDefault(); 
+    e.stopPropagation();
+    s.v=false; el.classList.remove('on'); 
+  };
+
+  el.addEventListener('touchstart', press, {passive:false});
+  el.addEventListener('touchend', release, {passive:false});
+  el.addEventListener('touchcancel', release, {passive:false});
+  el.addEventListener('mousedown', press);
+  el.addEventListener('mouseup', release);
+  el.addEventListener('mouseleave', release);
+  return s;
+}
+const btnL = mkBtn('bL');
+const btnR = mkBtn('bR');
+const keys = {};
+document.addEventListener('keydown', e=>keys[e.key.toLowerCase()]=true);
+document.addEventListener('keyup',   e=>keys[e.key.toLowerCase()]=false);
+
+function crossedFinish(px, py) {
+  const ft = tiles[tiles.length-1]; 
+  const mid  = edgeMid(ft.cx, ft.cy, ft.exit);
+  const outA = edgeAngle(ft.exit);
+  const nx = Math.cos(outA), ny = Math.sin(outA);
+  const perp = -ny, pery = nx;
+  const d0 = (px    -mid.x)*nx + (py    -mid.y)*ny;
+  const d1 = (car.x -mid.x)*nx + (car.y -mid.y)*ny;
+  const pd = Math.abs((car.x-mid.x)*perp + (car.y-mid.y)*pery);
+  return pd < ROAD_W*0.9 && d0 < 0 && d1 >= 0;
+}
+
+function resetGame() {
+  tiles = buildTrack();
+  const st = tiles[0];
+  const em = edgeMid(st.cx, st.cy, st.exit);
+  const em0= edgeMid(st.cx, st.cy, st.entry);
+  car = { 
+    x:st.cx, y:st.cy, 
+    angle:Math.atan2(em.y-em0.y, em.x-em0.x), 
+    speed:0, trail:[], falling:false, fallAlpha:1, 
+    tIdx: 0, onHex:true, onRoad:true 
+  };
+  cam = { x:car.x, y:car.y, zoom:0.75 }; // <--- SOKKAL KÖZELEBBI KAMERA
+  raceStart=0; raceTime=0; finished=false;
+  updHUD(0);
+}
+
+let lastTs=0;
+function update(ts) {
+  const dt = Math.min((ts-lastTs)/1000, 0.05);
+  lastTs = ts;
+
+  if (car.falling) {
+    car.fallAlpha -= dt*1.5;
+    car.speed *= 0.9;
+    car.x += Math.cos(car.angle)*car.speed*dt;
+    car.y += Math.sin(car.angle)*car.speed*dt;
+    if (car.fallAlpha <= 0) {
+      resetGame(); state='racing';
+      doFlash('LEESTÉL!');
+    }
+    return;
+  }
+
+  if (finished) return;
+
+  const goL = btnL.v || keys['arrowleft'] || keys['a'];
+  const goR = btnR.v || keys['arrowright']|| keys['d'];
+  const gasK= keys['arrowup'] || keys['w'];
+  const gas   = goL || goR || gasK;
+  const brake = (!goL && !goR && !gasK);
+  const steer = goL ? -1 : goR ? 1 : 0;
+
+  const maxSpd = car.onRoad ? MAX_ROAD : MAX_HEX;
+  if (gas)   car.speed += ACCEL*dt;
+  if (brake) car.speed -= BRAKE*dt;
+  else if (!gas) car.speed -= COAST*dt;
+  if (!car.onRoad) car.speed *= (1 - 0.8*dt); 
+  car.speed = Math.max(0, Math.min(maxSpd, car.speed));
+
+  const sr = STEER * (0.3 + 0.7*car.speed/MAX_ROAD);
+  car.angle += steer*sr*dt;
+
+  const px=car.x, py=car.y;
+  car.x += Math.cos(car.angle)*car.speed*dt;
+  car.y += Math.sin(car.angle)*car.speed*dt;
+
+  // --- GLOBÁLIS POZÍCIÓ ELLENŐRZÉS (Hogy ne ess le a fűben) ---
+  let bestDistCenter = Infinity;
+  let newIdx = car.tIdx;
+  let foundHex = false;
+  let bestRoadDist = Infinity;
+
+  // Végignézzük az ÖSSZES hexát, így bárhol vágsz át a füvön, életben maradsz
+  for (let i = 0; i < tiles.length; i++) {
+    const t = tiles[i];
+    if (inHex(car.x, car.y, t.cx, t.cy)) {
+      foundHex = true;
+      const distC = Math.hypot(car.x - t.cx, car.y - t.cy);
+      if (distC < bestDistCenter) {
+        bestDistCenter = distC;
+        newIdx = i;
+        bestRoadDist = distToRoadCenter(car.x, car.y, t);
+      }
+    }
+  }
+
+  // Híd leesés mechanika javítva
+  if (car.tIdx === 7 && bestRoadDist > ROAD_W/2 + 5) {
+    if (inHex(car.x, car.y, tiles[1].cx, tiles[1].cy)) {
+      newIdx = 1; 
+      bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]);
+      car.speed *= 0.6; 
+      doFlash('LEESTÉL A HÍDRÓL!');
+    } else {
+      foundHex = false;
+    }
+  }
+
+  car.tIdx = newIdx;
+  car.onHex = foundHex;
+  car.onRoad = bestRoadDist <= ROAD_W/2 + 5;
+
+  if (!car.onHex) { car.falling=true; car.fallAlpha=1; car.trail=[]; }
+
+  if (car.onRoad && !car.falling) {
+    tiles[car.tIdx].visited = true;
+  }
+
+  if (car.speed>5) {
+    car.trail.push({x:car.x,y:car.y});
+    if(car.trail.length>120) car.trail.shift();
+  }
+
+  if (raceStart===0 && car.speed>5) raceStart=ts;
+  if (raceStart>0 && !finished) raceTime=ts-raceStart;
+
+  if (!car.falling && crossedFinish(px,py)) {
+    const allVisited = tiles.every(t => t.visited);
+    if (allVisited) {
+      finished=true;
+      if (!bestTime||raceTime<bestTime) bestTime=raceTime;
+      doFlash('CÉLBA ÉRTÉL!');
+      setTimeout(()=>showFinish(), 1800);
+    } else {
+      doFlash('KIHAGYTÁL EGY CHECKPOINTOT!');
+      car.speed *= 0.8; 
+    }
+  }
+
+  const ahead = 100+car.speed*0.15;
+  const tx=car.x+Math.cos(car.angle)*ahead, ty=car.y+Math.sin(car.angle)*ahead;
+  cam.x += (tx-cam.x)*0.08;
+  cam.y += (ty-cam.y)*0.08;
+  
+  // Kamera Zoom kiszámítása: Nagyobb érték = közelebbi kamera
+  const targetZoom = car.falling ? 0.8 : (car.onRoad ? 0.7 - (car.speed/MAX_ROAD)*0.15 : 0.65);
+  cam.zoom += (targetZoom - cam.zoom) * 0.05;
+
+  updHUD();
+}
+
+function w2s(wx,wy){ return { sx:(wx-cam.x)*cam.zoom+cv.width/2, sy:(wy-cam.y)*cam.zoom+cv.height/2 }; }
+
+function drawBackground() {
+  const bg = ctx.createLinearGradient(0, 0, 0, cv.height);
+  bg.addColorStop(0, '#1a8cff');
+  bg.addColorStop(1, '#80d4ff');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,cv.width,cv.height);
+}
+
+function drawTileGlow(sx, sy, s) {
+  ctx.save(); ctx.translate(sx, sy); ctx.scale(s, s);
+  ctx.beginPath();
+  for (let i=0; i<6; i++) {
+    const a = Math.PI/3*i;
+    i===0 ? ctx.moveTo(R*Math.cos(a), R*Math.sin(a)) : ctx.lineTo(R*Math.cos(a), R*Math.sin(a));
+  }
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)'; 
+  ctx.lineWidth = 10; ctx.stroke();
+  ctx.restore();
+}
+
+function drawScene() {
+  drawBackground();
+  const half=TSIZE/2;
+  const s=cam.zoom;
+
+  for (const t of tiles) {
+    if (t.isOverpass) continue;
+    const {sx,sy}=w2s(t.cx,t.cy);
+    if(sx<-half*s*2||sx>cv.width+half*s*2||sy<-half*s*2||sy>cv.height+half*s*2) continue;
+    ctx.save(); ctx.translate(sx,sy); ctx.scale(s,s);
+    ctx.drawImage(renderTile(t),-half,-half);
+    ctx.restore();
+    if (t.visited) drawTileGlow(sx, sy, s);
+  }
+
+  if(car.trail.length>1 && !car.falling && car.tIdx < 7){
+    drawTrail();
+  }
+
+  if (car.tIdx < 7) drawCar();
+
+  for (const t of tiles) {
+    if (!t.isOverpass) continue;
+    const {sx,sy}=w2s(t.cx,t.cy);
+    ctx.save(); ctx.translate(sx,sy); ctx.scale(s,s);
+    ctx.drawImage(renderTile(t),-half,-half);
+    ctx.restore();
+    if (t.visited) drawTileGlow(sx, sy, s);
+  }
+
+  if (car.tIdx >= 7) {
+    drawTrail(); 
+    drawCar();
+  }
+}
+
+function drawTrail() {
+  ctx.beginPath();
+  for(let i=1; i<car.trail.length; i++){
+    const pa=w2s(car.trail[i-1].x, car.trail[i-1].y);
+    const pb=w2s(car.trail[i].x, car.trail[i].y);
+    ctx.moveTo(pa.sx,pa.sy); ctx.lineTo(pb.sx,pb.sy);
+  }
+  ctx.strokeStyle=`rgba(255,50,0,0.5)`; ctx.lineWidth=3*cam.zoom; ctx.lineCap='round'; ctx.stroke();
+}
+
+function drawCar() {
+  const {sx,sy}=w2s(car.x,car.y);
+  const s=cam.zoom;
+  ctx.save();
+  ctx.globalAlpha=car.falling?Math.max(0,car.fallAlpha):1;
+  ctx.translate(sx,sy); ctx.rotate(car.angle+Math.PI/2); ctx.scale(s,s);
+
+  const L=CAR_L, W=CAR_W;
+  ctx.save(); ctx.translate(4,4); ctx.globalAlpha*=0.4;
+  ctx.fillStyle='#000'; ctx.beginPath();
+  ctx.roundRect(-W/2,-L/2,W,L,[W*0.4,W*0.4,W*0.2,W*0.2]); ctx.fill();
+  ctx.restore();
+
+  const bc=car.falling?'#333':(car.onRoad?'#00aaff':'#cc3300'); 
+  ctx.fillStyle=bc; ctx.beginPath();
+  ctx.roundRect(-W/2,-L/2,W,L,[W*0.45,W*0.45,W*0.2,W*0.2]); ctx.fill();
+
+  ctx.fillStyle=car.falling?'#222':'#000';
+  ctx.fillRect(-W*0.9,-L*0.06,W*0.28,L*0.48);
+  ctx.fillRect( W*0.62,-L*0.06,W*0.28,L*0.48);
+
+  ctx.fillStyle='#0a1526'; ctx.beginPath();
+  ctx.ellipse(0,-L*0.04,W*0.3,L*0.25,0,0,Math.PI*2); ctx.fill();
+
+  ctx.fillStyle=car.falling?'#222':'#ffffff'; ctx.beginPath();
+  ctx.moveTo(-W*0.3,-L*0.5); ctx.lineTo(W*0.3,-L*0.5);
+  ctx.lineTo(W*0.1,-L*0.75); ctx.lineTo(-W*0.1,-L*0.75); ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle='#fff';
+  ctx.fillRect(-W*0.75,-L*0.62,W*1.5,L*0.08); 
+  ctx.fillRect(-W*0.7, L*0.38,W*1.4,L*0.1);   
+
+  ctx.restore();
+}
+
+function fmt(ms){
+  const m=Math.floor(ms/60000);
+  const s=Math.floor((ms%60000)/1000);
+  const c=String(Math.floor(ms%1000)).padStart(3,'0');
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${c}`;
+}
+
+function updHUD(){
+  document.getElementById('hT').textContent=fmt(raceTime);
+  document.getElementById('hS').textContent=Math.round(car.speed*0.6);
+}
+
+let flT=null;
+function doFlash(t){
+  const el=document.getElementById('fl');
+  el.textContent=t; el.style.opacity='1';
+  clearTimeout(flT); flT=setTimeout(()=>el.style.opacity='0',2500);
+}
+
+function showFinish(){
+  state='finish';
+  const ov=document.getElementById('ov');
+  ov.innerHTML=`
+    <h1 style="font-size:clamp(30px,8vw,60px)">KIVÁLÓ IDŐ!</h1>
+    <p>EREDMÉNY<br><span style="font-size:36px;color:#00ffcc;font-weight:900;text-shadow:0 0 15px #00ffcc">${fmt(raceTime)}</span></p>
+    ${bestTime?`<p style="color:#ffcc00;font-size:16px;letter-spacing:2px;margin-top:10px;font-weight:bold">LEGJOBB: ${fmt(bestTime)}</p>`:''}
+    <button class="ob" id="sBtn" style="margin-top:20px; padding:16px 40px; font-size:20px;">ÚJ FUTAM</button>
+  `;
+  ov.style.display='flex';
+  document.getElementById('sBtn').addEventListener('click', startGame);
+}
+
+document.getElementById('rstBtn').addEventListener('click', ()=>{
+  if(state!=='racing') return;
+  resetGame();
+  doFlash('ÚJRAINDÍTVA');
+});
+
+function loop(ts){
+  if(state==='racing') update(ts);
+  drawScene();
+  requestAnimationFrame(loop);
+}
+
+function startGame(){
+  document.getElementById('ov').style.display='none';
+  const bd=document.getElementById('bst');
+  if(bd&&bestTime) bd.textContent=`LEGJOBB REKORD: ${fmt(bestTime)}`;
+  resetGame(); state='racing'; lastTs=performance.now();
+}
+
+document.getElementById('sBtn').addEventListener('click', startGame);
+resetGame();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
