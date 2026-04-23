@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>HEX RACER - WIDE TRACKMANIA EDITION</title>
+<title>HEX RACER</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { 
@@ -89,7 +89,7 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 </div>
 
 <div id="ov">
-  <h1>TRACKMANIA</h1>
+  <h1>HEX RACER</h1>
   <p>◀ Gáz + Balra &nbsp;|&nbsp; ▶ Gáz + Jobbra<br>Mindkettő felenged: Fék<br>Billentyű: A / D / W</p>
   <p style="color:#ffcc00; font-weight:bold;">Érints meg minden hexát a cél előtt!</p>
   <p id="bst" style="color:#ffe44d;font-size:14px;letter-spacing:2px;min-height:14px;font-weight:bold"></p>
@@ -98,20 +98,19 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 
 <script>
 // ─────────────────────────────────────────────────────
-//  CONFIG - KEVÉSBÉ DURVA SEBESSÉG
+//  CONFIG 
 // ─────────────────────────────────────────────────────
 const R       = 340;   
 const ROAD_W  = 240;   
 const CAR_L   = 36;    
 const CAR_W   = 16;
 
-// JELENTŐSEN LASSÍTOTT FIZIKA:
-const MAX_ROAD = 500;  // Végsebesség csökkentve (800-ról)
-const MAX_HEX  = 140;  // Fűben picit lassabb
-const ACCEL    = 220;  // Lassabb felgyorsulás (450-ről)
-const BRAKE    = 800;  // Kicsit lágyabb fék
-const COAST    = 100;  // Lágyabb motorfék
-const STEER    = 2.4;  // Stabilabb kormányzás lassabb tempónál
+const MAX_ROAD = 500;  
+const MAX_HEX  = 140;  
+const ACCEL    = 220;  
+const BRAKE    = 800;  
+const COAST    = 100;  
+const STEER    = 2.4;  
 
 const cv  = document.getElementById('c');
 const ctx = cv.getContext('2d');
@@ -465,11 +464,24 @@ function update(ts) {
     bestRoadDist = distToRoadCenter(car.x, car.y, tiles[newIdx]);
   }
 
+  // 1. HA A HÍDON (7) VAGY ÉS LEESEL RÓLA -> Zuhanás az alagútba
   if (newIdx === 7 && bestRoadDist > ROAD_W/2 + 5) {
     newIdx = 1;
     bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]);
     car.speed *= 0.5; 
     doFlash('LEESTÉL A HÍDRÓL!');
+  }
+
+  // 2. HA AZ ALAGÚTBAN (1) VAGY ÉS LETÉRSZ AZ ÚTRÓL -> Nekimész a híd pillérének!
+  if (newIdx === 1 && bestRoadDist > ROAD_W/2 - 2) {
+    let distToBridge = distToRoadCenter(car.x, car.y, tiles[7]);
+    if (distToBridge < ROAD_W/2 + 18) { // Ha közel vagy a híd betonjához
+      car.x = px; // Visszapattanás az előző pozícióra!
+      car.y = py;
+      car.speed *= -0.4; // Megfordul a sebesség iránya (pattan)
+      bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]); // Újrakalkulálás
+      doFlash('ÜTKÖZÉS!');
+    }
   }
 
   car.tIdx = newIdx;
