@@ -90,7 +90,7 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 
 <div id="ov">
   <h1>HEX RACER</h1>
-  <p>◀ Gáz + Balra &nbsp;|&nbsp; ▶ Gáz + Jobbra<br>Mindkettő felenged: Fék<br>Billentyű: A / D / W</p>
+  <p>◀ Gáz + Balra &nbsp;|&nbsp; ▶ Gáz + Jobbra<br>Mindkettő felenged: Fék (Féknyom!)<br>Billentyű: A / D / W</p>
   <p style="color:#ffcc00; font-weight:bold;">Érints meg minden hexát a cél előtt!</p>
   <p id="bst" style="color:#ffe44d;font-size:14px;letter-spacing:2px;min-height:14px;font-weight:bold"></p>
   <button class="ob" id="sBtn" style="margin-top:10px; padding:16px 40px; font-size:20px;">START</button>
@@ -98,12 +98,16 @@ pointer-events:none; opacity:0; z-index:15; transition:opacity .2s;
 
 <script>
 // ─────────────────────────────────────────────────────
-//  CONFIG 
+//  CONFIG
 // ─────────────────────────────────────────────────────
 const R       = 340;   
 const ROAD_W  = 240;   
-const CAR_L   = 36;    
+const CAR_L   = 38;    // Kicsit hosszabb az F1 kasztni miatt
 const CAR_W   = 16;
+// F1 specifikus arányok
+const CAR_FRONT_TRACK = 22;
+const CAR_REAR_TRACK = 24;
+const CAR_WHEEL_BASE = 28;
 
 const MAX_ROAD = 500;  
 const MAX_HEX  = 140;  
@@ -380,12 +384,38 @@ function resetGame() {
   car = { 
     x:st.cx, y:st.cy, 
     angle:Math.atan2(em.y-em0.y, em.x-em0.x), 
-    speed:0, trail:[], falling:false, fallAlpha:1, 
-    tIdx: 0, onHex:true, onRoad:true 
+    speed:0, trail:[], skidMarks:[], falling:false, fallAlpha:1, 
+    tIdx: 0, onHex:true, onRoad:true, steerVisual: 0 
   };
   cam = { x:car.x, y:car.y, zoom:0.55 }; 
   raceStart=0; raceTime=0; finished=false;
   updHUD(0);
+}
+
+// Segédfüggvény a kerékpozíciók és forgás számításához
+function getWheelCoords(baseAngle, isSkidding) {
+  const frontX = Math.cos(baseAngle) * (CAR_WHEEL_BASE/2 + 3);
+  const frontY = Math.sin(baseAngle) * (CAR_WHEEL_BASE/2 + 3);
+  const rearX  = Math.cos(baseAngle) * (-CAR_WHEEL_BASE/2 + 1);
+  const rearY  = Math.sin(baseAngle) * (-CAR_WHEEL_BASE/2 + 1);
+  const dx = Math.cos(baseAngle + Math.PI/2);
+  const dy = Math.sin(baseAngle + Math.PI/2);
+
+  const wheels = {
+    fl: { x: car.x + frontX + dx * CAR_FRONT_TRACK/2, y: car.y + frontY + dy * CAR_FRONT_TRACK/2, rot: baseAngle + car.steerVisual },
+    fr: { x: car.x + frontX - dx * CAR_FRONT_TRACK/2, y: car.y + frontY - dy * CAR_FRONT_TRACK/2, rot: baseAngle + car.steerVisual },
+    rl: { x: car.x + rearX  + dx * CAR_REAR_TRACK/2,  y: car.y + rearY  + dy * CAR_REAR_TRACK/2,  rot: baseAngle },
+    rr: { x: car.x + rearX  - dx * CAR_REAR_TRACK/2,  y: car.y + rearY  - dy * CAR_REAR_TRACK/2,  rot: baseAngle }
+  };
+
+  if(car.onRoad && isSkidding) {
+    const ptL = wheels.fl;
+    car.skidMarks.push({ p0: {x: ptL.x, y: ptL.y}, p1: {x: ptL.x, y: ptL.y}, wheel: 'l' });
+    const ptR = wheels.fr;
+    car.skidMarks.push({ p0: {x: ptR.x, y: ptR.y}, p1: {x: ptR.x, y: ptR.y}, wheel: 'r' });
+    if(car.skidMarks.length > 500) car.skidMarks.splice(0, 2);
+  }
+  return wheels;
 }
 
 let lastTs=0;
@@ -410,19 +440,23 @@ function update(ts) {
   const goL = btnL.v || keys['arrowleft'] || keys['a'];
   const goR = btnR.v || keys['arrowright']|| keys['d'];
   const gasK= keys['arrowup'] || keys['w'];
+  const brakeCondition = (!goL && !goR && !gasK); // Mindkét gomb (és W) elengedve -> Fék
+
   const gas   = goL || goR || gasK;
-  const brake = (!goL && !goR && !gasK);
   const steer = goL ? -1 : goR ? 1 : 0;
 
   const maxSpd = car.onRoad ? MAX_ROAD : MAX_HEX;
   if (gas)   car.speed += ACCEL*dt;
-  if (brake) car.speed -= BRAKE*dt;
+  if (brakeCondition) car.speed -= BRAKE*dt;
   else if (!gas) car.speed -= COAST*dt;
   if (!car.onRoad) car.speed *= (1 - 0.8*dt); 
   car.speed = Math.max(0, Math.min(maxSpd, car.speed));
 
   const sr = STEER * (0.3 + 0.7*car.speed/MAX_ROAD);
   car.angle += steer*sr*dt;
+  // Vizuális kormányelfordulás számítása
+  const maxSteerVisual = 0.5; // ~30 fok
+  car.steerVisual = steer * (Math.abs(sr/STEER)) * maxSteerVisual;
 
   const px=car.x, py=car.y;
   car.x += Math.cos(car.angle)*car.speed*dt;
@@ -464,7 +498,6 @@ function update(ts) {
     bestRoadDist = distToRoadCenter(car.x, car.y, tiles[newIdx]);
   }
 
-  // 1. HA A HÍDON (7) VAGY ÉS LEESEL RÓLA -> Zuhanás az alagútba
   if (newIdx === 7 && bestRoadDist > ROAD_W/2 + 5) {
     newIdx = 1;
     bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]);
@@ -472,14 +505,13 @@ function update(ts) {
     doFlash('LEESTÉL A HÍDRÓL!');
   }
 
-  // 2. HA AZ ALAGÚTBAN (1) VAGY ÉS LETÉRSZ AZ ÚTRÓL -> Nekimész a híd pillérének!
   if (newIdx === 1 && bestRoadDist > ROAD_W/2 - 2) {
     let distToBridge = distToRoadCenter(car.x, car.y, tiles[7]);
-    if (distToBridge < ROAD_W/2 + 18) { // Ha közel vagy a híd betonjához
-      car.x = px; // Visszapattanás az előző pozícióra!
+    if (distToBridge < ROAD_W/2 + 18) { 
+      car.x = px; 
       car.y = py;
-      car.speed *= -0.4; // Megfordul a sebesség iránya (pattan)
-      bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]); // Újrakalkulálás
+      car.speed *= -0.4; 
+      bestRoadDist = distToRoadCenter(car.x, car.y, tiles[1]); 
       doFlash('ÜTKÖZÉS!');
     }
   }
@@ -488,13 +520,14 @@ function update(ts) {
   car.onHex = foundHex;
   car.onRoad = bestRoadDist <= ROAD_W/2 + 5;
 
-  if (!car.onHex) { car.falling=true; car.fallAlpha=1; car.trail=[]; }
+  if (!car.onHex) { car.falling=true; car.fallAlpha=1; car.trail=[]; car.skidMarks=[]; }
 
-  if (car.onRoad && !car.falling) {
-    tiles[car.tIdx].visited = true;
-  }
+  const isSkidding = car.onRoad && brakeCondition && car.speed > 60; // Féknyom küszöb sebesség
 
-  if (car.speed>5) {
+  // Kerék koordináták frissítése és féknyom hozzáadása
+  getWheelCoords(car.angle, isSkidding);
+
+  if (!car.falling && car.speed>5) {
     car.trail.push({x:car.x,y:car.y});
     if(car.trail.length>160) car.trail.shift();
   }
@@ -548,6 +581,39 @@ function drawTileGlow(sx, sy, s) {
   ctx.restore();
 }
 
+function drawSkidMarks() {
+  if (car.skidMarks.length < 2) return;
+  
+  ctx.lineWidth = 2.5 * cam.zoom;
+  ctx.lineCap = 'butt';
+
+  // Külön rajzoljuk a bal és jobb oldalt, hogy folytonosak legyenek a vonalak
+  for (const side of ['l', 'r']) {
+    ctx.beginPath();
+    ctx.strokeStyle = (side === 'l') ? `rgba(0,0,0,0.5)` : `rgba(10,10,10,0.5)`; // Enyhe színeltérés a mélységnek
+    let last = null;
+    
+    for (let i = 0; i < car.skidMarks.length; i++) {
+      const mark = car.skidMarks[i];
+      if (mark.wheel !== side) continue;
+      
+      const p1 = w2s(mark.p1.x, mark.p1.y);
+      if (last === null) {
+        ctx.moveTo(p1.sx, p1.sy);
+      } else {
+        // Ellenőrizzük, nincs-e szakadás a féknyomban (pl. zuhanás után)
+        if (Math.hypot(mark.p1.x - last.p1.x, mark.p1.y - last.p1.y) < R*0.2) {
+          ctx.lineTo(p1.sx, p1.sy);
+        } else {
+          ctx.moveTo(p1.sx, p1.sy);
+        }
+      }
+      last = mark;
+    }
+    ctx.stroke();
+  }
+}
+
 function drawScene() {
   drawBackground();
   const half=TSIZE/2;
@@ -562,6 +628,8 @@ function drawScene() {
     ctx.restore();
     if (t.visited) drawTileGlow(sx, sy, s);
   }
+
+  drawSkidMarks(); // Féknyomok aszfaltra
 
   if(car.trail.length>1 && !car.falling && car.tIdx < 7){
     drawTrail();
@@ -594,37 +662,108 @@ function drawTrail() {
   ctx.strokeStyle=`rgba(255,50,0,0.5)`; ctx.lineWidth=4*cam.zoom; ctx.lineCap='round'; ctx.stroke();
 }
 
+function drawF1Wheels(wheelCoords, s) {
+  const fw_l=2.2, fw_w=4.8; // Első kerék méretek
+  const rw_l=2.4, rw_w=5.8; // Hátsó kerék méretek
+
+  for (const id in wheelCoords) {
+    const w = wheelCoords[id];
+    const {sx, sy} = w2s(w.x, w.y);
+    const length = (id[0] === 'f') ? fw_l : rw_l;
+    const width = (id[0] === 'f') ? fw_w : rw_w;
+
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(w.rot + Math.PI/2);
+    ctx.scale(s, s);
+
+    // Gumiabroncs
+    ctx.fillStyle = (car.onRoad && !car.falling) ? '#111' : '#333'; // Picit más szín, ha nem aszfalton vagyunk
+    ctx.beginPath();
+    ctx.roundRect(-width/2, -length/2, width, length, width*0.2);
+    ctx.fill();
+
+    // Felni/Kupak
+    ctx.fillStyle = '#cc0000'; // Ragyogó piros F1 kupak
+    ctx.beginPath();
+    ctx.ellipse(0, 0, width*0.15, length*0.2, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
 function drawCar() {
   const {sx,sy}=w2s(car.x,car.y);
   const s=cam.zoom;
+  const wheelCoords = getWheelCoords(car.angle, false);
+
+  drawF1Wheels(wheelCoords, s); // Kerekek rajzolása a kasztni alá
+
   ctx.save();
   ctx.globalAlpha=car.falling?Math.max(0,car.fallAlpha):1;
   ctx.translate(sx,sy); ctx.rotate(car.angle+Math.PI/2); ctx.scale(s,s);
 
   const L=CAR_L, W=CAR_W;
+  
+  // Kasztni árnyéka
   ctx.save(); ctx.translate(5,5); ctx.globalAlpha*=0.4;
   ctx.fillStyle='#000'; ctx.beginPath();
-  ctx.roundRect(-W/2,-L/2,W,L,[W*0.4,W*0.4,W*0.2,W*0.2]); ctx.fill();
+  // F1 kasztni forma árnyéka
+  ctx.moveTo(0, -L*0.9); // Orrkúp eleje
+  ctx.lineTo(W*0.2, -L*0.7);
+  ctx.lineTo(W*0.4, -L*0.4); // Kokpit eleje
+  ctx.lineTo(W*0.5, L*0.3); // Oldaldoboz közepe
+  ctx.lineTo(W*0.3, L*0.7); // Motortér/Cápauszony vége
+  ctx.lineTo(-W*0.3, L*0.7);
+  ctx.lineTo(-W*0.5, L*0.3);
+  ctx.lineTo(-W*0.4, -L*0.4);
+  ctx.lineTo(-W*0.2, -L*0.7);
+  ctx.closePath(); ctx.fill();
   ctx.restore();
 
-  const bc=car.falling?'#333':(car.onRoad?'#00aaff':'#cc3300'); 
-  ctx.fillStyle=bc; ctx.beginPath();
-  ctx.roundRect(-W/2,-L/2,W,L,[W*0.45,W*0.45,W*0.2,W*0.2]); ctx.fill();
+  // Fő kasztni (Kék)
+  ctx.fillStyle='#00aaff'; 
+  ctx.beginPath();
+  ctx.moveTo(0, -L*0.9);
+  ctx.lineTo(W*0.2, -L*0.7);
+  ctx.lineTo(W*0.4, -L*0.4);
+  ctx.lineTo(W*0.5, L*0.3);
+  ctx.lineTo(W*0.3, L*0.7);
+  ctx.lineTo(-W*0.3, L*0.7);
+  ctx.lineTo(-W*0.5, L*0.3);
+  ctx.lineTo(-W*0.4, -L*0.4);
+  ctx.lineTo(-W*0.2, -L*0.7);
+  ctx.closePath(); ctx.fill();
 
-  ctx.fillStyle=car.falling?'#222':'#000';
-  ctx.fillRect(-W*0.9,-L*0.06,W*0.28,L*0.48);
-  ctx.fillRect( W*0.62,-L*0.06,W*0.28,L*0.48);
+  // Első szárny
+  ctx.fillStyle='#fff'; 
+  const fwW=W*0.9, fwL=L*0.1;
+  ctx.beginPath();
+  ctx.roundRect(-fwW/2, -L*0.8, fwW, fwL, fwL*0.2); ctx.fill();
+  ctx.fillStyle='#ff0000';
+  ctx.fillRect(-fwW/2 + 2, -L*0.78, 4, fwL*0.7); // Kis piros szárnyelemek
+  ctx.fillRect( fwW/2 - 6, -L*0.78, 4, fwL*0.7);
 
-  ctx.fillStyle='#0a1526'; ctx.beginPath();
-  ctx.ellipse(0,-L*0.04,W*0.3,L*0.25,0,0,Math.PI*2); ctx.fill();
-
-  ctx.fillStyle=car.falling?'#222':'#ffffff'; ctx.beginPath();
-  ctx.moveTo(-W*0.3,-L*0.5); ctx.lineTo(W*0.3,-L*0.5);
-  ctx.lineTo(W*0.1,-L*0.75); ctx.lineTo(-W*0.1,-L*0.75); ctx.closePath(); ctx.fill();
-
+  // Hátsó szárny
   ctx.fillStyle='#fff';
-  ctx.fillRect(-W*0.75,-L*0.62,W*1.5,L*0.08); 
-  ctx.fillRect(-W*0.7, L*0.38,W*1.4,L*0.1);   
+  const rwW=W*0.8, rwL=L*0.15;
+  ctx.beginPath();
+  ctx.roundRect(-rwW/2, L*0.5, rwW, rwL, rwL*0.2); ctx.fill();
+  ctx.fillStyle='#ff0000'; // Ragyogó piros tartóelemek
+  ctx.fillRect(-rwW/2 + 1, L*0.52, 2, rwL*0.6);
+  ctx.fillRect( rwW/2 - 3, L*0.52, 2, rwL*0.6);
+
+  // Pilótafülke (feketített)
+  ctx.fillStyle='#010101'; ctx.beginPath();
+  ctx.ellipse(0,-L*0.15,W*0.25,L*0.2,0,0,Math.PI*2); ctx.fill();
+  // Bukócső/Halo (kék, picit sötétebb)
+  ctx.strokeStyle='#0088dd'; ctx.lineWidth=1.5; ctx.beginPath();
+  ctx.ellipse(0,-L*0.15,W*0.3,L*0.25,0,-Math.PI/4,Math.PI+Math.PI/4); ctx.stroke();
+
+  // Rajtszám
+  ctx.fillStyle='#fff'; ctx.font=`bold ${CAR_W*0.6}px Courier New`;
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('1',0,L*0.2);
 
   ctx.restore();
 }
