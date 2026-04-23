@@ -332,11 +332,12 @@ function distToRoadCenter(px, py, tile) {
   return best;
 }
 
+// JAVÍTÁS: Nagyobb tolerancia a hatszögek szélénél (3.0 -> 35.0), hogy fűvön kanyarodáskor ne öljön meg
 function inHex(px, py, cx, cy) {
   for (let e=0; e<6; e++) {
     const a = edgeAngle(e);
     const mid = edgeMid(cx, cy, e);
-    if ((px-mid.x)*Math.cos(a) + (py-mid.y)*Math.sin(a) > 3.0) return false;
+    if ((px-mid.x)*Math.cos(a) + (py-mid.y)*Math.sin(a) > 35.0) return false; 
   }
   return true;
 }
@@ -664,7 +665,7 @@ function update(ts) {
           doFlash('GUARDRAIL!', '#ffaa00');
           car.onRoad = true; 
       } 
-      // FALL OFF WORLD BOUNDARY
+      // FALL OFF WORLD BOUNDARY (completely left the hexagons)
       else if (!car.onHex) { 
           car.falling = true; 
           car.fallAlpha = 1; 
@@ -672,16 +673,14 @@ function update(ts) {
           car.skidMarks = []; 
           doFlash('OFF TRACK!', '#ff3366');
       }
-      // FALL OFF RAMP SIDE
-      else if (checkHighUp(car.tIdx) && !currentTile.isOverpass && bestRoadDist > maxAllowedDist + 5) {
+      // FALL OFF RAMP SIDE (JAVÍTVA: extra ráhagyás, hogy ne ess le egyből, ha kicsit a fűre mégy)
+      else if (checkHighUp(car.tIdx) && !currentTile.isOverpass && bestRoadDist > maxAllowedDist + 35) {
           car.falling = true; 
           car.fallAlpha = 1; 
           car.trail = []; 
           car.skidMarks = []; 
           doFlash('FELL OFF RAMP!', '#ff3366');
       }
-      
-      // Removed the Pillar Collision block to allow free driving under bridges
   }
 
   if (car.onRoad && !car.falling && !finished && currentTile) {
