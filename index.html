@@ -46,7 +46,8 @@ body { background:#04060a; overflow:hidden; width:100vw; height:100vh; font-fami
   <div class="hud-right"></div>
 </div>
 
-<div id="fl" style="position:fixed; top:0; left:50%; transform:translateX(-50%); width:2px; height:100vh; background:linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.15) 66%, transparent 100%); z-index:9; pointer-events:none; display:none;"></div>
+<div id="fl"></div>
+<div id="centerLine" style="position:fixed; top:0; left:50%; transform:translateX(-50%); width:2px; height:100vh; background:linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 33%, transparent 66%); z-index:9; pointer-events:none; display:none;"></div>
 <div id="btnRetry" class="icon-btn" onclick="loadLevel(currentLevelIdx)" style="position:fixed;top:14px;left:16px;z-index:20;display:none;pointer-events:auto;">⟳</div><div id="btnMenu" class="icon-btn" onclick="initMenu()" style="position:fixed;top:14px;right:16px;z-index:20;display:none;pointer-events:auto;">☰</div>
 <div id="ctrl">
   <div class="cb" id="bL" style="left:0;"><span style="color:rgba(255,255,255,0.2);font-size:32px;">◀</span></div>
@@ -147,7 +148,7 @@ function initMenu(){
   document.getElementById('ctrl').style.display='none';
   document.getElementById('btnRetry').style.display='none';
   document.getElementById('btnMenu').style.display='none';
-  document.getElementById('fl').style.display='none';
+  document.getElementById('centerLine').style.display='none';
   // Load level 0 in background for visuals
   currentLevelIdx=0;
   const tlvl = LEVEL_DATA[0];
@@ -162,7 +163,7 @@ function initMenu(){
   document.getElementById('ctrl').style.display='none';
   document.getElementById('btnRetry').style.display='none';
   document.getElementById('btnMenu').style.display='none';
-  document.getElementById('fl').style.display='none';
+  document.getElementById('centerLine').style.display='none';
   
   const grid=document.getElementById('lvlGrid');grid.innerHTML='';
   let unlocked=true;
@@ -189,7 +190,7 @@ function loadLevel(idx){
   document.getElementById('ctrl').style.display='block';
   document.getElementById('btnRetry').style.display='flex';
   document.getElementById('btnMenu').style.display='flex';
-  document.getElementById('fl').style.display='block';
+  document.getElementById('centerLine').style.display='block';
   document.getElementById('btnRetry').style.display='flex';
   document.getElementById('hPR').textContent=`PR: ${savedRecords[idx]?fmt(savedRecords[idx]):'--:--.---'}`;
   resetGame();state='racing';lastTs=performance.now();document.getElementById('c').classList.remove('blur-bg');
@@ -870,9 +871,10 @@ function drawScene(){
 function updHUD(){document.getElementById('hT').textContent=fmt(raceTime);}
 let flT=null;
 function doFlash(t,color){
-  color=color||'#00ffff';
+  color=color||'#ffffff';
+  if(color==='#00ffff'||color==='#00ffcc') color='#ffffff';
   const el=document.getElementById('fl');el.textContent=t;el.style.color=color;
-  el.style.textShadow=`0 0 20px ${color},0 4px 10px rgba(0,0,0,0.8)`;el.style.opacity='1';
+  el.style.textShadow=`0 4px 10px rgba(0,0,0,0.8)`;el.style.opacity='1';
   clearTimeout(flT);flT=setTimeout(()=>el.style.opacity='0',2500);
 }
 
