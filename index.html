@@ -62,7 +62,7 @@ body { background:#04060a; overflow:hidden; width:100vw; height:100vh; font-fami
     <span style="color:#ff3366">Watch out: Grass slows you down, falling off is fatal!</span>
   </p>
   <div id="lvlGrid"></div>
-  <button onclick="clearPRs()" style="margin-top:30px;font-size:16px;padding:12px 28px;background:rgba(180,0,0,0.7);color:#fff;border:1px solid #a33;border-radius:6px;cursor:pointer;font-family:inherit;letter-spacing:2px;">ÖSSZES REKORD TÖRLÉSE</button>
+  <button onclick="clearPRs()" style="margin-top:30px;font-size:16px;padding:12px 28px;background:rgba(180,0,0,0.7);color:#fff;border:1px solid #a33;border-radius:6px;cursor:pointer;font-family:inherit;letter-spacing:2px;">CLEAR ALL RECORDS</button>
 </div>
 <div id="finishMenu"></div>
 
@@ -185,7 +185,7 @@ function initMenu(){
     const timeHint='1\u2605 '+fmt(t1)+' &nbsp;&middot;&nbsp; 2\u2605 '+fmt(t2)+' &nbsp;&middot;&nbsp; 3\u2605 '+fmt(t3);
     btn.innerHTML=`<div class="ln">P\u00c1LYA ${i+1}</div>`
       +(unlocked
-        ?`<div class="lt">LEGJOBB: <span style="color:#fff">${fmt(best)}</span></div>
+        ?`<div class="lt">BEST: <span style="color:#fff">${fmt(best)}</span></div>
           <div class="lt" style="color:#ffd700;font-size:18px;margin-top:6px;">${starHtml}</div>
           <div class="lt" style="color:#999;font-size:12px;margin-top:4px;">${timeHint}</div>`
         :`<div class="lt" style="color:#777;">1 CSILLAG KELL A FELOLD\u00c1SHOZ</div>`);
@@ -920,23 +920,23 @@ function showFinish(){
   const [t1,t2,t3]=getStarTimes(currentLevelIdx);
   let nextBtn='';
   if(currentLevelIdx+1<LEVEL_DATA.length&&stars>=1)
-    nextBtn=`<button class="ob" onclick="loadLevel(${currentLevelIdx+1})">KÖVETKEZŐ PÁLYA</button>`;
+    nextBtn=`<button class="ob" onclick="loadLevel(${currentLevelIdx+1})">NEXT LEVEL</button>`;
   const starHtml='★'.repeat(stars)+'<span style="color:#333;">'+'&#9734;'.repeat(3-stars)+'</span>';
   const nextTarget=stars===0?t1:stars===1?t2:stars===2?t3:null;
   const hintHtml=nextTarget
-    ?`<div style="font-size:15px;color:#aaa;margin-bottom:16px;">Következő csillaghoz: ${fmt(nextTarget)}</div>`
-    :`<div style="font-size:15px;color:#0f0;margin-bottom:16px;">Minden csillag megszerezve!</div>`;
+    ?`<div style="font-size:15px;color:#aaa;margin-bottom:16px;">Next star target: ${fmt(nextTarget)}</div>`
+    :`<div style="font-size:15px;color:#0f0;margin-bottom:16px;">All stars collected!</div>`;
   ov.innerHTML=`
-    <h1 style="font-size:clamp(30px,8vw,60px);color:#fff;">${isNewRecord?'Új Rekord!':'Futam Vége!'}</h1>
+    <h1 style="font-size:clamp(30px,8vw,60px);color:#fff;">${isNewRecord?'New Record!':'Race Finished!'}</h1>
     <div style="color:#ffd700;font-size:44px;margin:10px 0;text-shadow:0 0 20px rgba(255,215,0,0.4);">${starHtml}</div>
-    <p style="margin-bottom:10px;">IDŐ<br>
+    <p style="margin-bottom:10px;">TIME<br>
       <span style="font-size:40px;color:#fff;">${fmt(raceTime)}</span>
     </p>
     ${hintHtml}
     <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;">
-      <button class="ob" onclick="loadLevel(${currentLevelIdx})">Újra</button>
+      <button class="ob" onclick="loadLevel(${currentLevelIdx})">Retry</button>
       ${nextBtn}
-      <button class="ob" onclick="initMenu()">Menü</button>
+      <button class="ob" onclick="initMenu()">Menu</button>
     </div>
   `;
   ov.style.display='flex';
@@ -966,7 +966,7 @@ function loop(ts){
 initMenu();requestAnimationFrame(loop);
 
 function clearPRs(){
-  if(confirm('Biztosan törlöd az összes eddigi rekordot és eredményt?')){
+  if(confirm('Are you sure you want to clear all records?')){
     savedRecords=Array(LEVEL_DATA.length).fill(null);
     try{ localStorage.removeItem('hexRacerRecords_v3'); }catch(e){}
     initMenu();
