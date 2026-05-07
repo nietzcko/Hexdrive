@@ -42,7 +42,7 @@ body { background:#04060a; overflow:hidden; width:100vw; height:100vh; font-fami
 <canvas id="c"></canvas>
 <div id="hud">
   <div class="hud-left"></div>
-  <div class="hud-center"><div id="timeDisplay"><div id="hT">00:00.000</div><div id="hPR">PR: --:--.---</div></div></div>
+  <div class="hud-center"><div id="timeDisplay"><div id="hT">00:00.000</div><div id="hPR">PR: --:--.---</div><div id="hStar" style="font-size:clamp(12px,3vw,14px);color:#ffd700;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,0.8);"></div></div></div>
   <div class="hud-right"></div>
 </div>
 
@@ -209,6 +209,17 @@ function loadLevel(idx){
   
   document.getElementById('btnRetry').style.display='flex';
   document.getElementById('hPR').textContent=`PR: ${savedRecords[idx]?fmt(savedRecords[idx]):'--:--.---'}`;
+  {
+    const best=savedRecords[idx];
+    const stars=calcStars(idx,best);
+    const [t1,t2,t3]=getStarTimes(idx);
+    const starEl=document.getElementById('hStar');
+    if(stars>=3){ starEl.textContent='★★★'; }
+    else{
+      const target=stars===0?t1:stars===1?t2:t3;
+      starEl.textContent='★'.repeat(stars)+'☆'.repeat(3-stars)+' → '+fmt(target);
+    }
+  }
   resetGame();state='racing';lastTs=performance.now();document.getElementById('c').classList.remove('blur-bg');
 }
 
