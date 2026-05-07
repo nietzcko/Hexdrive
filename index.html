@@ -748,7 +748,7 @@ function update(ts){
         finished=true;
         if(!savedRecords[currentLevelIdx]||raceTime<savedRecords[currentLevelIdx]){savedRecords[currentLevelIdx]=raceTime;saveRecords();isNewRecord=true;}
         doFlash(isNewRecord?'NEW RECORD!':'FINISH!','#00ffcc');
-        setTimeout(()=>showFinish(),800);
+        showFinish();
       } else {doFlash('MISSED A SECTOR!','#ff3366');car.speed*=0.8;}
     }
   }
