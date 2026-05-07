@@ -55,13 +55,14 @@ body { background:#04060a; overflow:hidden; width:100vw; height:100vh; font-fami
 </div>
 <canvas id="hexBg" style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:1;"></canvas>
 <div id="lvlSel">
-  <div style="position:absolute;top:16px;right:20px;color:rgba(255,255,255,0.3);font-size:14px;font-weight:bold;letter-spacing:2px;z-index:110;">v4.0.0</div>
+  <div style="position:absolute;top:16px;right:20px;color:rgba(255,255,255,0.3);font-size:14px;font-weight:bold;letter-spacing:2px;z-index:110;">v9.9.0</div>
   <h1 style="text-align:center;color:#fff;font-size:clamp(30px,8vw,60px);letter-spacing:8px;text-shadow:0 4px 8px rgba(0,0,0,0.8);margin-bottom:10px;">HEX RACER</h1>
   <p style="color:rgba(255,255,255,0.7);font-size:14px;letter-spacing:1px;text-align:center;margin-bottom:40px;max-width:600px;line-height:1.6;">
     Reach the Gold time (<span style="color:#ffcc00;font-weight:bold;">05:00.000</span>) to unlock the next level!<br>
     <span style="color:#ff3366">Watch out: Grass slows you down, falling off is fatal!</span>
   </p>
   <div id="lvlGrid"></div>
+  <button onclick="clearPRs()" style="margin-top:30px;font-size:16px;padding:12px 28px;background:rgba(180,0,0,0.7);color:#fff;border:1px solid #a33;border-radius:6px;cursor:pointer;font-family:inherit;letter-spacing:2px;">ÖSSZES REKORD TÖRLÉSE</button>
 </div>
 <div id="finishMenu"></div>
 
@@ -79,7 +80,22 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 // ── CONFIG ────────────────────────────────────────────
 const R       = 1020;
 const ROAD_W  = 420;
-const GOLD_TIME = 300000;
+const STAR3_TIMES = [14000, 19000, 18000, 20000, 20000, 20000, 20000, 20000, 22000, 20000];
+const getStarTimes = (idx) => {
+  const t3 = STAR3_TIMES[idx] || 20000;
+  return [t3 + 5000, t3 + 2000, t3];
+};
+
+// Calculate how many stars a time earns
+const calcStars = (idx, time) => {
+  if (!time) return 0;
+  const [t1, t2, t3] = getStarTimes(idx);
+  if (time <= t3) return 3;
+  if (time <= t2) return 2;
+  if (time <= t1) return 1;
+  return 0;
+};
+
 
 const CAR_L  = 60;
 const CAR_W  = 12;
@@ -115,9 +131,8 @@ function rsz(){ cv.width=innerWidth; cv.height=innerHeight; }
 rsz(); window.addEventListener('resize', rsz);
 
 const LEVEL_DATA = [
-  // 1-5 flowing (no sharp 
-
-  [[3,0,"S"],[3,5],[2,3],[0,3],[0,4],[1,0],[3,0],[3,5],[2,3],[0,3],[0,4],[1,0],[3,0],[3,4],[1,3],[0,3],[0,5],[2,0],[3,0,"N"],[3,1,"N"],[4,1,"N"],[4,1,"O"],[4,1,"O"],[4,2,"O"],[5,2,"O"],[5,2,"O"],[5,3,"O"],[0,3,"O"],[0,5],[2,4,"F"]],
+  // 1-5 flowing (no sharp hairpins)
+  [[3,0,'S'],[3,1],[4,0],[3,5],[2,1],[4,0],[3,0,'F']],
   [[3,0,'S'],[3,1],[4,0],[3,1],[4,0],[3,1],[4,1],[4,5],[2,1],[4,0],[3,0,'F']],
   [[3,0,'S'],[3,1],[4,0],[3,5],[2,0],[3,1],[4,0],[3,5],[2,0],[3,0,'F']],
   [[3,0,'S'],[3,1],[4,1],[4,1,'O'],[4,0],[3,1],[4,0],[3,5],[2,1],[4,0],[3,0,'F']],
@@ -149,38 +164,38 @@ function initMenu(){
   document.getElementById('ctrl').style.display='none';
   document.getElementById('btnRetry').style.display='none';
   document.getElementById('btnMenu').style.display='none';
-  
-  // Load level 0 in background for visuals
   currentLevelIdx=0;
-  const tlvl = LEVEL_DATA[0];
+  const tlvl=LEVEL_DATA[0];
   SEQ=tlvl.map(t=>({entry:t[0],exit:t[1],isStart:t[2]==='S',isFinish:t[2]==='F',isOverpass:t[2]==='O',isNarrow:t[2]==='N'}));
-  tCache.clear(); buildTrack();
+  tCache.clear();buildTrack();
   cam={x:trackTiles[0].cx,y:trackTiles[0].cy,angle:0,zoom:0.6};
-  car=null; // no car in menu
-
+  car=null;
   state='menu';
   document.getElementById('finishMenu').style.display='none';
   document.getElementById('hud').style.display='none';
-  document.getElementById('ctrl').style.display='none';
-  document.getElementById('btnRetry').style.display='none';
-  document.getElementById('btnMenu').style.display='none';
-  
-  
   const grid=document.getElementById('lvlGrid');grid.innerHTML='';
   let unlocked=true;
   for(let i=0;i<LEVEL_DATA.length;i++){
     const best=savedRecords[i];
+    const stars=calcStars(i,best);
+    const [t1,t2,t3]=getStarTimes(i);
     const btn=document.createElement('div');
     btn.className='lvlBtn'+(unlocked?'':' locked');
-    btn.innerHTML=`<div class="ln">LEVEL ${i+1}</div>`+
-      (unlocked?`<div class="lt">BEST: <span style="color:#fff">${fmt(best)}</span></div>`
-               :`<div class="lt" style="color:#777;">GOLD REQUIRED TO UNLOCK</div>`);
+    const starHtml='\u2605'.repeat(stars)+'<span style="color:#555;">'+'\u2606'.repeat(3-stars)+'</span>';
+    const timeHint='1\u2605 '+fmt(t1)+' &nbsp;&middot;&nbsp; 2\u2605 '+fmt(t2)+' &nbsp;&middot;&nbsp; 3\u2605 '+fmt(t3);
+    btn.innerHTML=`<div class="ln">P\u00c1LYA ${i+1}</div>`
+      +(unlocked
+        ?`<div class="lt">LEGJOBB: <span style="color:#fff">${fmt(best)}</span></div>
+          <div class="lt" style="color:#ffd700;font-size:18px;margin-top:6px;">${starHtml}</div>
+          <div class="lt" style="color:#999;font-size:12px;margin-top:4px;">${timeHint}</div>`
+        :`<div class="lt" style="color:#777;">1 CSILLAG KELL A FELOLD\u00c1SHOZ</div>`);
     if(unlocked)btn.onclick=()=>loadLevel(i);
     grid.appendChild(btn);
-    if(best===null||best>GOLD_TIME)unlocked=false;
+    if(calcStars(i,best)<1)unlocked=false;
   }
   document.getElementById('lvlSel').style.display='flex';
 }
+
 
 function loadLevel(idx){
   currentLevelIdx=idx;
@@ -242,6 +257,8 @@ function buildTrack(){
       }
     }
   }
+  // FIX: Ensure track tiles are drawn ON TOP of decoration tiles (grass, wheat, etc)
+  allTiles = [...allTiles.filter(t => t.isDeco), ...trackTiles];
 }
 
 function getLocalBezier(tile){
@@ -720,7 +737,7 @@ function update(ts){
         finished=true;
         if(!savedRecords[currentLevelIdx]||raceTime<savedRecords[currentLevelIdx]){savedRecords[currentLevelIdx]=raceTime;saveRecords();isNewRecord=true;}
         doFlash(isNewRecord?'NEW RECORD!':'FINISH!','#00ffcc');
-        setTimeout(()=>showFinish(raceTime<=GOLD_TIME),2500);
+        setTimeout(()=>showFinish(),2500);
       } else {doFlash('MISSED A SECTOR!','#ff3366');car.speed*=0.8;}
     }
   }
