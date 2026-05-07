@@ -903,21 +903,31 @@ function doFlash(t,color){
   clearTimeout(flT);flT=setTimeout(()=>el.style.opacity='0',2500);
 }
 
-function showFinish(isGold){
+function showFinish(){
   state='finish';const ov=document.getElementById('finishMenu');
+  const stars=calcStars(currentLevelIdx,raceTime);
+  const [t1,t2,t3]=getStarTimes(currentLevelIdx);
   let nextBtn='';
-  if(currentLevelIdx+1<LEVEL_DATA.length&&savedRecords[currentLevelIdx]!==null&&savedRecords[currentLevelIdx]<=GOLD_TIME)
-    nextBtn=`<button class="ob" onclick="loadLevel(${currentLevelIdx+1})">NEXT LEVEL</button>`;
+  if(currentLevelIdx+1<LEVEL_DATA.length&&stars>=1)
+    nextBtn=`<button class="ob" onclick="loadLevel(${currentLevelIdx+1})">KÖVETKEZŐ PÁLYA</button>`;
+  const starHtml='★'.repeat(stars)+'<span style="color:#333;">'+'&#9734;'.repeat(3-stars)+'</span>';
+  const nextTarget=stars===0?t1:stars===1?t2:stars===2?t3:null;
+  const hintHtml=nextTarget
+    ?`<div style="font-size:15px;color:#aaa;margin-bottom:16px;">Következő csillaghoz: ${fmt(nextTarget)}</div>`
+    :`<div style="font-size:15px;color:#0f0;margin-bottom:16px;">Minden csillag megszerezve!</div>`;
   ov.innerHTML=`
-    <h1 style="font-size:clamp(30px,8vw,60px);color:#fff;">${isNewRecord?'NEW RECORD!':'RACE FINISHED!'}</h1>
-    <p style="margin-bottom:20px;">TIME<br><span style="font-size:46px;color:#fff;font-weight:900;text-shadow:0 2px 6px rgba(0,0,0,0.8)">${fmt(raceTime)}</span></p>
-    ${isGold?`<p style="color:#ffcc00;font-size:18px;letter-spacing:2px;font-weight:bold;margin-bottom:30px;">🏆 GOLD TIME ACHIEVED! 🏆</p>`
-            :`<p style="color:#ff3366;font-size:16px;letter-spacing:2px;font-weight:bold;margin-bottom:30px;">TARGET: ${fmt(GOLD_TIME)} FOR GOLD</p>`}
-    <div style="display:flex;gap:15px;flex-wrap:wrap;justify-content:center;">
-      <button class="ob" onclick="initMenu()">MENU</button>
-      <button class="ob" onclick="loadLevel(${currentLevelIdx})">RETRY</button>
+    <h1 style="font-size:clamp(30px,8vw,60px);color:#fff;">${isNewRecord?'Új Rekord!':'Futam Vége!'}</h1>
+    <div style="color:#ffd700;font-size:44px;margin:10px 0;text-shadow:0 0 20px rgba(255,215,0,0.4);">${starHtml}</div>
+    <p style="margin-bottom:10px;">IDŐ<br>
+      <span style="font-size:40px;color:#0ff;text-shadow:0 0 10px rgba(0,255,255,0.4);">${fmt(raceTime)}</span>
+    </p>
+    ${hintHtml}
+    <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;">
+      <button class="ob" onclick="loadLevel(${currentLevelIdx})">Újra</button>
       ${nextBtn}
-    </div>`;
+      <button class="ob" onclick="initMenu()">Menü</button>
+    </div>
+  `;
   ov.style.display='flex';
 }
 
@@ -943,6 +953,15 @@ function loop(ts){
 }
 
 initMenu();requestAnimationFrame(loop);
+
+function clearPRs(){
+  if(confirm('Biztosan törlöd az összes eddigi rekordot és eredményt?')){
+    savedRecords=Array(LEVEL_DATA.length).fill(null);
+    try{ localStorage.removeItem('hexRacerRecords_v3'); }catch(e){}
+    initMenu();
+  }
+}
+
 </script>
 </body>
 </html>
