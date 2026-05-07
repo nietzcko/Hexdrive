@@ -737,7 +737,7 @@ function update(ts){
         finished=true;
         if(!savedRecords[currentLevelIdx]||raceTime<savedRecords[currentLevelIdx]){savedRecords[currentLevelIdx]=raceTime;saveRecords();isNewRecord=true;}
         doFlash(isNewRecord?'NEW RECORD!':'FINISH!','#00ffcc');
-        setTimeout(()=>showFinish(),2500);
+        setTimeout(()=>showFinish(),800);
       } else {doFlash('MISSED A SECTOR!','#ff3366');car.speed*=0.8;}
     }
   }
@@ -919,7 +919,7 @@ function showFinish(){
     <h1 style="font-size:clamp(30px,8vw,60px);color:#fff;">${isNewRecord?'Új Rekord!':'Futam Vége!'}</h1>
     <div style="color:#ffd700;font-size:44px;margin:10px 0;text-shadow:0 0 20px rgba(255,215,0,0.4);">${starHtml}</div>
     <p style="margin-bottom:10px;">IDŐ<br>
-      <span style="font-size:40px;color:#0ff;text-shadow:0 0 10px rgba(0,255,255,0.4);">${fmt(raceTime)}</span>
+      <span style="font-size:40px;color:#fff;">${fmt(raceTime)}</span>
     </p>
     ${hintHtml}
     <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;">
