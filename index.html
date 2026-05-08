@@ -141,7 +141,7 @@ rsz(); window.addEventListener('resize', rsz);
 
 const LEVEL_DATA = [
   // 1-5 flowing (no sharp hairpins)
-  [[3,0,'S'],[3,0,'X',1,4],[3,2],[5,1],[4,0],[3,4],[1,5],[2,0],[3,0,'F']],
+  [[3,0,'S'],[3,0,'X',4,1],[3,5],[2,4],[1,3],[0,2],[5,1],[4,1],[4,3],[0,4,'F']],
   [[3,0,'S'],[3,1],[4,0],[3,1],[4,0],[3,1],[4,1],[4,5],[2,1],[4,0],[3,0,'F']],
   [[3,0,'S'],[3,1],[4,0],[3,5],[2,0],[3,1],[4,0],[3,5],[2,0],[3,0,'F']],
   [[3,0,'S'],[3,1],[4,1],[4,1,'O'],[4,0],[3,1],[4,0],[3,5],[2,1],[4,0],[3,0,'F']],
@@ -248,12 +248,18 @@ function buildTrack(){
   trackTiles=[];
   let cx=0,cy=0;
   const centerMap=new Set();
+  const crossMap=new Set();
   const cTheme = typeof LEVEL_THEMES !== 'undefined' && LEVEL_THEMES[currentLevelIdx] ? LEVEL_THEMES[currentLevelIdx] : 'grass';
   for(let i=0;i<SEQ.length;i++){
     const s=SEQ[i];
+    const cKey = `${Math.round(cx)}_${Math.round(cy)}`;
+    let skipRender = false;
+    if(crossMap.has(cKey)) skipRender = true;
+    if(s.isCross) crossMap.add(cKey);
+
     trackTiles.push({idx:i,cx,cy,key:`T_${i}`,entry:s.entry,exit:s.exit,
-      isStart:s.isStart||false,isFinish:s.isFinish||false,isCross:s.isCross||false,entry2:s.entry2??-1,exit2:s.exit2??-1,isNarrow:s.isNarrow||false,isDeco:false,visited:false,theme:cTheme});
-    centerMap.add(`${Math.round(cx)}_${Math.round(cy)}`);
+      isStart:s.isStart||false,isFinish:s.isFinish||false,isCross:s.isCross||false,entry2:s.entry2??-1,exit2:s.exit2??-1,isNarrow:s.isNarrow||false,isDeco:false,skipRender:skipRender,visited:false,theme:cTheme});
+    centerMap.add(cKey);
     const nc=neighborCenter(cx,cy,s.exit);cx=nc.x;cy=nc.y;
   }
   allTiles=[...trackTiles];
@@ -372,6 +378,7 @@ const TSIZE=Math.ceil(R*2+10);
 const tCache=new Map();
 
 function renderTile(tile){
+  if(tile.skipRender) { const oc=document.createElement("canvas"); oc.width=oc.height=1; return oc; }
   try{
   const ck=`${tile.key}_${tile.entry}_${tile.exit}_${tile.isNarrow?'N':'W'}${tile.isCross?'C'+tile.entry2+tile.exit2:''}_${tile.biome}_${tile.theme||'grass'}`;
   if(tCache.has(ck))return tCache.get(ck);
@@ -508,6 +515,7 @@ function renderTile(tile){
     const p2 = edgeMid(lc, lc, tile.exit);
     const p3 = edgeMid(lc, lc, tile.entry2);
     const p4 = edgeMid(lc, lc, tile.exit2);
+    const edges = [tile.entry, tile.exit, tile.entry2, tile.exit2];
 
     function drawBaseCross(lineWidth, color) {
       c.beginPath();
@@ -524,76 +532,65 @@ function renderTile(tile){
       c.fill();
     }
 
-    drawBaseCross(w + 30, 'rgba(0,0,0,0.3)');
-    drawBaseCross(w + 16, '#2c2c2c');
-
-    // Alap sötét aszfalt, amire a PWM blokkokat rajzoljuk
-    drawBaseCross(w, '#383838');
-
-    // PWM-szerű "keresztbe csíkozás" (textúra blokkok) a 4 bekötő úton
-    // Minél közelebb érünk a kereszteződéshez, annál sűrűbbek/vékonyabbak lesznek a blokkok!
-    const S = w / 120;
-    const centerDist = 35 * S; // Rombusz széle nagyjából
-    const edgeDist = R;
-
-    for(const e of [tile.entry, tile.exit, tile.entry2, tile.exit2]) {
-      const em = edgeMid(lc, lc, e);
-      const angle = Math.atan2(em.y - lc, em.x - lc);
-
-      let currR = edgeDist;
-
-      // Kívülről (szélétől) haladunk befelé (középpont felé)
-      // A PWM lényege: a gap (sötét csík) mondjuk fix 6px, de a világos aszfalt blokk hossza csökken!
-      while(currR > centerDist) {
-        // Blokkhossz (dash) a távolság függvényében:
-        // Kívül (currR = R) kb. 160, belül (currR = centerDist) kb. 40
-        let progress = (currR - centerDist) / (edgeDist - centerDist);
-        let blockLen = 30 + 130 * Math.pow(progress, 1.5); 
-        let gapLen = 6 + 4 * (1 - progress); // A rés picit tágul vagy fix marad
-
-        let rEnd = currR;
-        let rStart = Math.max(centerDist, currR - blockLen);
-
-        // Világos fő aszfalt
-        c.strokeStyle = '#3b3b3b';
-        c.lineWidth = w;
-        c.lineCap = 'butt';
-        c.beginPath();
-        c.moveTo(lc + Math.cos(angle)*rStart, lc + Math.sin(angle)*rStart);
-        c.lineTo(lc + Math.cos(angle)*rEnd, lc + Math.sin(angle)*rEnd);
-        c.stroke();
-
-        // Belső sötétebb aszfalt sáv a blokkon belül
-        c.strokeStyle = '#353535';
-        c.lineWidth = w * 0.85;
-        c.beginPath();
-        c.moveTo(lc + Math.cos(angle)*rStart, lc + Math.sin(angle)*rStart);
-        c.lineTo(lc + Math.cos(angle)*rEnd, lc + Math.sin(angle)*rEnd);
-        c.stroke();
-
-        currR = rStart - gapLen;
-      }
+    function drawDashedCross(lineWidth, color, dash) {
+      c.beginPath();
+      c.moveTo(p1.x, p1.y); c.lineTo(p2.x, p2.y);
+      c.moveTo(p3.x, p3.y); c.lineTo(p4.x, p4.y);
+      c.strokeStyle = color;
+      c.lineWidth = lineWidth;
+      c.lineCap = 'butt';
+      c.setLineDash(dash);
+      c.stroke();
+      c.setLineDash([]);
     }
 
-    const edges = [tile.entry, tile.exit, tile.entry2, tile.exit2];
-    const a1 = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-    const a2 = Math.atan2(p4.y - p3.y, p4.x - p3.x);
-    const n1x = -Math.sin(a1), n1y = Math.cos(a1);
-    const n2x = -Math.sin(a2), n2y = Math.cos(a2);
+    // 1. Árnyék / föld alap
+    drawBaseCross(w + 30, 'rgba(0,0,0,0.3)');
+    // 2. Szegély
+    drawBaseCross(w + 16, '#2c2c2c');
+    // 3. Tiszta aszfalt 
+    drawBaseCross(w, '#383838');
 
-    const d = 35 * S; 
+    // 4. Sima út textúrák (a halvány repedések) 
+    // Mivel a játékos belehajt a kereszteződésbe, vizuálisan jobb ha VÉGIGFUT az alap útminta!
+    drawDashedCross(w, '#3b3b3b', [160, 6]);
+    drawDashedCross(w * 0.85, '#353535', [200, 8]);
 
-    c.beginPath();
-    c.moveTo(lc + d*n1x + d*n2x, lc + d*n1y + d*n2y); 
-    c.lineTo(lc - d*n1x + d*n2x, lc - d*n1y + d*n2y); 
-    c.lineTo(lc - d*n1x - d*n2x, lc - d*n1y - d*n2y); 
-    c.lineTo(lc + d*n1x - d*n2x, lc + d*n1y - d*n2y); 
-    c.closePath();
+    // 5. Kopásnyom középen: gumiabroncsok okozta sötétedés
+    const wearGrad = c.createRadialGradient(lc, lc, 0, lc, lc, w*0.8);
+    wearGrad.addColorStop(0, 'rgba(0,0,0,0.25)');
+    wearGrad.addColorStop(0.5, 'rgba(0,0,0,0.08)');
+    wearGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    c.beginPath(); c.arc(lc, lc, w*0.8, 0, Math.PI*2);
+    c.fillStyle = wearGrad; c.fill();
 
-    c.fillStyle = '#2f2f2f'; 
-    c.fill();
+    // 6. Zebra-szerű felfestés a bekötő utakra (Crosswalk)
+    // Ez jelzi, hogy itt egy kereszteződés jön, és "életet" ad neki!
+    for(const e of edges) {
+      const em = edgeMid(lc, lc, e);
+      const a = Math.atan2(em.y - lc, em.x - lc); 
 
-    function drawDashedArms(lineWidth, color, dashArray, gapR) {
+      const crosswalkDist = w * 0.7; // Milyen messze van a közepétől
+      const cwWidth = w * 0.8; // Zebrák szélessége
+
+      c.save();
+      c.translate(lc + Math.cos(a)*crosswalkDist, lc + Math.sin(a)*crosswalkDist);
+      c.rotate(a + Math.PI/2); // Merőleges az útra
+
+      c.strokeStyle = 'rgba(255, 255, 255, 0.4)'; // Halvány fehér zebrák
+      c.lineWidth = 14;
+      c.setLineDash([25, 20]); // Sűrű szaggatott vonal
+      c.lineCap = 'butt';
+      c.beginPath();
+      c.moveTo(-cwWidth/2, 0);
+      c.lineTo(cwWidth/2, 0);
+      c.stroke();
+
+      c.restore();
+    }
+
+    // 7. Sárga szaggatott vonalak a zebráig
+    function drawDashedArmsOutward(lineWidth, color, dashArray, startR) {
       c.strokeStyle = color;
       c.lineWidth = lineWidth;
       c.lineCap = 'butt';
@@ -601,71 +598,34 @@ function renderTile(tile){
       c.beginPath();
       for(const e of edges) {
         const em = edgeMid(lc, lc, e);
-        const a = Math.atan2(lc - em.y, lc - em.x); 
-        const endX = lc - Math.cos(a) * gapR;
-        const endY = lc - Math.sin(a) * gapR;
-        c.moveTo(em.x, em.y);
-        c.lineTo(endX, endY);
+        const a = Math.atan2(em.y - lc, em.x - lc); 
+        const startX = lc + Math.cos(a) * startR;
+        const startY = lc + Math.sin(a) * startR;
+        c.moveTo(startX, startY);
+        c.lineTo(em.x, em.y);
       }
       c.stroke();
       c.setLineDash([]);
     }
 
-    drawDashedArms(w - 8*S, 'rgba(0,0,0,0.2)', [40*S, 40*S], w/2);
+    // A sárga vonalak megállnak a zebránál
+    // A szürke szélső vonalak is megállnak a zebránál
+    drawDashedArmsOutward(w - 8, 'rgba(0,0,0,0.2)', [40, 40], w * 0.7 + 10);
 
-    const xLen = 20 * S;
+    // A sárga vonalak megállnak a zebránál
+    drawDashedArmsOutward(12, 'rgba(220,180,50,0.4)', [40, 40], w * 0.7 + 10);
 
-    // Kifelé futó, fokozatosan vékonyodó sárga sávok
-    const wEdge = 12; // Eredeti játék normál vonalvastagsága
-    const wCenter = 12 * S; // Jelenlegi vastagság a kereszteződés közepén
-    const dashLen = 40 * S;
-    const gapLen = 40 * S;
-    const startR = 60 * S;
+    // Opcionálisan: A kereszteződés közepén nincs vonal, teljesen üres és letisztult.
 
-    c.fillStyle = 'rgba(220,180,50,0.4)';
-    for(const e of edges) {
-      const em = edgeMid(lc, lc, e);
-      const angle = Math.atan2(em.y - lc, em.x - lc); 
-      const distEdge = Math.hypot(em.x - lc, em.y - lc);
-
-      let currR = startR;
-      while(currR < distEdge) {
-        let r1 = currR;
-        let r2 = Math.min(currR + dashLen, distEdge);
-
-        // Progress: 0 a közepénél (startR), 1 a csempe szélénél
-        let p1 = Math.max(0, (r1 - startR) / (distEdge - startR));
-        let p2 = Math.max(0, (r2 - startR) / (distEdge - startR));
-
-        let w1 = wCenter - (wCenter - wEdge) * p1;
-        let w2 = wCenter - (wCenter - wEdge) * p2;
-
-        c.save();
-        c.translate(lc, lc);
-        c.rotate(angle);
-        c.beginPath();
-        c.moveTo(r1, -w1/2);
-        c.lineTo(r2, -w2/2);
-        c.lineTo(r2, w2/2);
-        c.lineTo(r1, w1/2);
-        c.closePath();
-        c.fill();
-        c.restore();
-
-        currR += dashLen + gapLen;
-      }
-    }
-
-    c.save();
-    c.translate(lc, lc);
+    // VAGY: Egy finom sárga "X" figyelmeztető jelzés a közepén
+    const xSize = 15;
+    c.strokeStyle = 'rgba(220,180,50,0.3)';
+    c.lineWidth = 8;
+    c.lineCap = 'round';
     c.beginPath();
-    c.rotate(a1);
-    c.rect(-xLen, -6*S, xLen*2, 12*S);
-    c.fillStyle = 'rgba(220,180,50,0.4)'; c.fill();
-    c.rotate(a2 - a1);
-    c.rect(-xLen, -6*S, xLen*2, 12*S);
-    c.fill();
-    c.restore();
+    c.moveTo(lc - xSize, lc - xSize); c.lineTo(lc + xSize, lc + xSize);
+    c.moveTo(lc - xSize, lc + xSize); c.lineTo(lc + xSize, lc - xSize);
+    c.stroke();
 
     c.restore();
   }
