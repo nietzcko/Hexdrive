@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +17,7 @@ body { background:#04060a; overflow:hidden; width:100vw; height:100vh; font-fami
 #timeDisplay { display:flex; flex-direction:column; align-items:center; pointer-events:none; }
 #hT { font-size:clamp(32px,8vw,42px); font-weight:400; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,0.8); margin-bottom:-2px; font-variant-numeric:tabular-nums; font-family:'Share Tech Mono', monospace; }
 #hPR { font-size:clamp(14px,4vw,16px); font-weight:bold; color:#ffcc00; letter-spacing:1px; text-shadow:0 1px 3px rgba(0,0,0,0.8); }
-.icon-btn { background:rgba(0,0,0,0.65); border:none; color:#fff; border-radius:6px; cursor:pointer; transition:all .15s; pointer-events:auto; display:flex; align-items:center; justify-content:center; width:48px; height:48px; font-size:24px; backdrop-filter:blur(4px); }
+.icon-btn { background:rgba(0,0,0,0.65); border:none; color:#fff; border-radius:6px; cursor:pointer; transition:all .15s; pointer-events:auto; display:flex; align-items:center; justify-content:center; width:48px; height:48px; font-size:24px;  }
 .icon-btn:active { background:rgba(255,255,255,0.15); color:#fff; box-shadow:0 0 0 2px #fff; }
 #ctrl { position:fixed; inset:0; display:none; z-index:10; pointer-events:none; }
 .cb { position:absolute; top:0; width:50vw; height:100vh; pointer-events:auto; touch-action:none; background:transparent; border:none; display:flex; align-items:flex-end; justify-content:center; padding-bottom:15px; }
@@ -24,28 +25,30 @@ body { background:#04060a; overflow:hidden; width:100vw; height:100vh; font-fami
 .cb.on_UNUSED { background:rgba(255,255,255,0.12); border-color:#fff; color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,0.5); transform:scale(0.96); }
 .cb span { pointer-events:none; }
 #fl { position:fixed; top:35%; left:50%; transform:translate(-50%,-50%); font-size:clamp(20px,6vw,46px); font-weight:900; letter-spacing:4px; text-align:center; color:#ffffff; text-shadow:0 2px 6px rgba(0,0,0,0.9); pointer-events:none; opacity:0; z-index:15; transition:opacity .2s; }
-.ob { background:rgba(0,0,0,0.65); border:none; color:#fff; border-radius:6px; padding:14px 24px; font-size:16px; font-weight:bold; cursor:pointer; transition:all .2s; backdrop-filter:blur(4px); font-family:inherit; }
+.ob { background:rgba(0,0,0,0.65); border:none; color:#fff; border-radius:6px; padding:14px 24px; font-size:16px; font-weight:bold; cursor:pointer; transition:all .2s;  font-family:inherit; }
 .ob:hover,.ob:active { background:#00cfff; color:#000; box-shadow:0 2px 8px rgba(0,0,0,0.8); }
-#lvlSel { position:fixed; inset:0; background:rgba(4,6,20,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:200; display:flex; flex-direction:column; align-items:center; padding:40px 20px; overflow-y:auto; }
+#lvlSel { position:fixed; inset:0; background:rgba(4,6,20,0.6); z-index:200; display:flex; flex-direction:column; align-items:center; padding:40px 20px; overflow-y:auto; }
 #lvlGrid { display:grid; grid-template-columns:1fr; gap:10px; width:100%; max-width:500px; }
-.lvlBtn { background:rgba(0,0,0,0.65); border:none; border-radius:8px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; backdrop-filter:blur(4px); font-variant-numeric:tabular-nums; }
+.lvlBtn { background:rgba(0,0,0,0.65); border:none; border-radius:8px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s;  font-variant-numeric:tabular-nums; }
 .lvlBtn:hover { transform:scale(1.03); background:rgba(0,50,100,0.9); box-shadow:0 0 15px #00cfff; }
 .lvlBtn.locked { background:rgba(20,20,20,0.8); border-color:#444; cursor:not-allowed; transform:none; box-shadow:none; }
 .ln { font-size:22px; font-weight:900; color:#fff; margin-bottom:10px; letter-spacing:2px; }
 .lt { font-size:14px; color:#ffffff; }
 .lvlBtn.locked .ln { color:#555; }
 .lvlBtn.locked .lt { color:#555; }
-#finishMenu { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:100; display:none; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(4px); touch-action:none; text-align:center; padding:20px; }
+#finishMenu { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:100; display:none; flex-direction:column; align-items:center; justify-content:center;  touch-action:none; text-align:center; padding:20px; }
 
-#c.blur-bg { filter: blur(3px) brightness(0.5); }
+#c.blur-bg { filter: brightness(0.7); }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="hud">
   <div class="hud-left"></div>
-  <div class="hud-center"><div id="timeDisplay"><div id="hT">00:00.000</div><div id="hPR">PR: --:--.---</div><div id="hStar" style="font-size:clamp(12px,3vw,14px);color:#ffd700;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,0.8);"></div></div></div>
-  <div class="hud-right"><div id="hHex" style="font-size:clamp(13px,3.5vw,16px);color:#00ffcc;text-shadow:0 1px 3px rgba(0,0,0,0.8);text-align:right;"></div></div>
+  <div class="hud-center"><div id="timeDisplay"><div id="hT">00:00.000</div><div id="hPR">PR: --:--.---</div><div id="hStar" style="font-size:clamp(12px,3vw,14px);color:#ffd700;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,0.8);"></div>
+  <div id="hHex" style="display:inline-block; margin:0 auto; font-size:clamp(16px,4vw,20px);color:#fff;font-weight:bold;letter-spacing:2px;text-shadow:0 2px 4px rgba(0,0,0,0.8);margin-top:6px;background:rgba(0,0,0,0.4);padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);"></div>
+  </div></div>
+  <div class="hud-right"></div>
 </div>
 
 <div id="fl"></div>
@@ -138,7 +141,7 @@ rsz(); window.addEventListener('resize', rsz);
 
 const LEVEL_DATA = [
   // 1-5 flowing (no sharp hairpins)
-  [[3,0,'S'],[3,1],[4,0],[3,5],[2,1],[4,0],[3,0,'F']],
+  [[3,0,'S'],[3,0,'X',1,4],[3,2],[5,1],[4,0],[3,4],[1,5],[2,0],[3,0,'F']],
   [[3,0,'S'],[3,1],[4,0],[3,1],[4,0],[3,1],[4,1],[4,5],[2,1],[4,0],[3,0,'F']],
   [[3,0,'S'],[3,1],[4,0],[3,5],[2,0],[3,1],[4,0],[3,5],[2,0],[3,0,'F']],
   [[3,0,'S'],[3,1],[4,1],[4,1,'O'],[4,0],[3,1],[4,0],[3,5],[2,1],[4,0],[3,0,'F']],
@@ -158,6 +161,7 @@ try{ const s=localStorage.getItem('hexRacerRecords_v3');if(s)savedRecords=JSON.p
 function saveRecords(){ try{ localStorage.setItem('hexRacerRecords_v3',JSON.stringify(savedRecords)); }catch(e){} }
 
 let SEQ=[], currentLevelIdx=0, totalCPs=0;
+let _finishFrameDone=false;
 
 function fmt(ms){
   if(ms===null||ms===undefined)return '--:--.---';
@@ -172,8 +176,8 @@ function initMenu(){
   document.getElementById('btnMenu').style.display='none';
   currentLevelIdx=0;
   const tlvl=LEVEL_DATA[0];
-  SEQ=tlvl.map(t=>({entry:t[0],exit:t[1],isStart:t[2]==='S',isFinish:t[2]==='F',isNarrow:t[2]==='N'}));
-  tCache.clear();buildTrack();
+  SEQ=tlvl.map(t=>({entry:t[0],exit:t[1],isStart:t[2]==='S',isFinish:t[2]==='F',isNarrow:t[2]==='N',isCross:t[2]==='X',entry2:t[3]??-1,exit2:t[4]??-1}));
+  tCache.clear();buildTrack();warmCache();
   cam={x:trackTiles[0].cx,y:trackTiles[0].cy,angle:0,zoom:0.6};
   car=null;
   state='menu';
@@ -205,7 +209,7 @@ function initMenu(){
 
 function loadLevel(idx){
   currentLevelIdx=idx;
-  SEQ=LEVEL_DATA[idx].map(t=>({entry:t[0],exit:t[1],isStart:t[2]==='S',isFinish:t[2]==='F',isNarrow:t[2]==='N'}));
+  SEQ=LEVEL_DATA[idx].map(t=>({entry:t[0],exit:t[1],isStart:t[2]==='S',isFinish:t[2]==='F',isNarrow:t[2]==='N',isCross:t[2]==='X',entry2:t[3]??-1,exit2:t[4]??-1}));
   document.getElementById('lvlSel').style.display='none';
   document.getElementById('finishMenu').style.display='none';
   document.getElementById('hud').style.display='grid';
@@ -248,7 +252,7 @@ function buildTrack(){
   for(let i=0;i<SEQ.length;i++){
     const s=SEQ[i];
     trackTiles.push({idx:i,cx,cy,key:`T_${i}`,entry:s.entry,exit:s.exit,
-      isStart:s.isStart||false,isFinish:s.isFinish||false,isNarrow:s.isNarrow||false,isDeco:false,visited:false,theme:cTheme});
+      isStart:s.isStart||false,isFinish:s.isFinish||false,isCross:s.isCross||false,entry2:s.entry2??-1,exit2:s.exit2??-1,isNarrow:s.isNarrow||false,isDeco:false,visited:false,theme:cTheme});
     centerMap.add(`${Math.round(cx)}_${Math.round(cy)}`);
     const nc=neighborCenter(cx,cy,s.exit);cx=nc.x;cy=nc.y;
   }
@@ -260,23 +264,39 @@ function buildTrack(){
     snow: ['stone','stone','meadow','stone','dirt','stone'],
     urban: ['stone','dirt','stone','stone','dirt','stone']
   };
-  const biomes = themeBiomes[cTheme] || themeBiomes.grass;
+  const biomes=themeBiomes[cTheme]||themeBiomes.grass;
+  let decoTiles=[];
   for(const t of trackTiles){
     for(let e=0;e<6;e++){
-      const a=edgeAngle(e);
-      const acx=t.cx+Math.cos(a)*APOTHEM*2,acy=t.cy+Math.sin(a)*APOTHEM*2;
-      const key=`${Math.round(acx)}_${Math.round(acy)}`;
+      const nc=neighborCenter(t.cx,t.cy,e);
+      const key=Math.round(nc.x)+'_'+Math.round(nc.y);
       if(!centerMap.has(key)){
         centerMap.add(key);
-        allTiles.push({idx:'d'+decoIdx++,cx:acx,cy:acy,key:`D_${decoIdx}`,
-          isDeco:true,biome:biomes[Math.floor(Math.random()*biomes.length)],visited:true,theme:cTheme});
+        decoTiles.push({idx:-1,cx:nc.x,cy:nc.y,key:key,isDeco:true,biome:biomes[Math.floor(Math.random()*biomes.length)],isCross:false,visited:true,theme:cTheme});
       }
     }
   }
-  // FIX: Ensure track tiles are drawn ON TOP of decoration tiles (grass, wheat, etc)
-  allTiles = [...allTiles.filter(t => t.isDeco), ...trackTiles];
+  let waterTiles=[];
+  let currentRing=decoTiles;
+  for(let r=0;r<1;r++){
+    let nextRing=[];
+    for(const t of currentRing){
+      for(let e=0;e<6;e++){
+        const nc=neighborCenter(t.cx,t.cy,e);
+        const key=Math.round(nc.x)+'_'+Math.round(nc.y);
+        if(!centerMap.has(key)){
+          centerMap.add(key);
+          const wt={idx:-1,cx:nc.x,cy:nc.y,key:key,isDeco:true,biome:'water',isCross:false,visited:true,theme:cTheme};
+          waterTiles.push(wt);
+          nextRing.push(wt);
+        }
+      }
+    }
+    currentRing=nextRing;
+  }
+  // FIX: Ensure track tiles are drawn ON TOP of decoration/water tiles
+  allTiles=[...waterTiles,...decoTiles,...trackTiles];
 }
-
 function getLocalBezier(tile){
   const lc=TSIZE/2;
   const p0=edgeMid(lc,lc,tile.entry),p3=edgeMid(lc,lc,tile.exit);
@@ -291,8 +311,33 @@ function bezPt(t,p0,c1,c2,p3){
   return {x:u*u*u*p0.x+3*u*u*t*c1.x+3*u*t*t*c2.x+t*t*t*p3.x,
           y:u*u*u*p0.y+3*u*u*t*c1.y+3*u*t*t*c2.y+t*t*t*p3.y};
 }
+function distToSegment(px,py,ax,ay,bx,by){
+  const dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy;
+  if(len2===0)return Math.hypot(px-ax,py-ay);
+  const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/len2));
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+}
+function distToRoadCenter2(px,py,tile){
+  if(!tile.isCross||tile.entry2<0)return Infinity;
+  // two arms: entry2->center and exit2->center
+  const em2=edgeMid(tile.cx,tile.cy,tile.entry2);
+  const em3=edgeMid(tile.cx,tile.cy,tile.exit2);
+  const d1=distToSegment(px,py,em2.x,em2.y,tile.cx,tile.cy);
+  const d2=distToSegment(px,py,em3.x,em3.y,tile.cx,tile.cy);
+  return Math.min(d1,d2);
+}
 function distToRoadCenter(px,py,tile){
   if(tile.isDeco)return Infinity;
+  if(tile.isCross){
+    // straight arms to center for main path too
+    const em0=edgeMid(tile.cx,tile.cy,tile.entry);
+    const em1=edgeMid(tile.cx,tile.cy,tile.exit);
+    const d1=distToSegment(px,py,em0.x,em0.y,tile.cx,tile.cy);
+    const d2=distToSegment(px,py,em1.x,em1.y,tile.cx,tile.cy);
+    // also central pad
+    const dc=Math.hypot(px-tile.cx,py-tile.cy);
+    return Math.min(d1,d2,dc);
+  }
   const bz=getWorldBezier(tile);
   let best=Infinity;
   for(let i=0;i<=40;i++){
@@ -328,7 +373,7 @@ const tCache=new Map();
 
 function renderTile(tile){
   try{
-  const ck=`${tile.key}_${tile.entry}_${tile.exit}_${tile.isNarrow?'N':'W'}_${tile.biome}_${tile.theme||'grass'}`;
+  const ck=`${tile.key}_${tile.entry}_${tile.exit}_${tile.isNarrow?'N':'W'}${tile.isCross?'C'+tile.entry2+tile.exit2:''}_${tile.biome}_${tile.theme||'grass'}`;
   if(tCache.has(ck))return tCache.get(ck);
   const oc=document.createElement('canvas');oc.width=oc.height=TSIZE;
   const c=oc.getContext('2d');const lc=TSIZE/2;
@@ -341,136 +386,47 @@ function renderTile(tile){
   const biome = tile.biome || 'meadow';
 
   const themeBase = {
-      grass:  { meadow:['#7db84a','#5e9630'], forest:['#4bc328','#3aa21b'], wheat:['#e6c300','#cca300'], dirt:['#8b5a2b','#6b421a'], stone:['#8c8c8c','#666666'] },
+      grass:  { meadow:['#7db84a','#5e9630'], forest:['#2a4f1a','#1e3c12'], wheat:['#e6c300','#cca300'], dirt:['#8b5a2b','#6b421a'], stone:['#8c8c8c','#666666'] },
       desert: { meadow:['#d2b48c','#c3a070'], forest:['#c8a050','#b08840'], wheat:['#e8c870','#d0b050'], dirt:['#c39b60','#a88048'], stone:['#a08c78','#85705a'] },
       snow:   { meadow:['#eef5ff','#ccddee'], forest:['#dce8f5','#b8d0e8'], wheat:['#eef5ff','#ccddee'], dirt:['#b0c0d0','#90a0b0'], stone:['#99aabb','#778899'] },
       urban:  { meadow:['#3a3a4a','#2a2a3a'], forest:['#303040','#202030'], wheat:['#444455','#333344'], dirt:['#2a2a3a','#1a1a2a'], stone:['#4a4a5a','#3a3a4a'] }
   };
 
   let isTrack = !tile.isDeco;
-  let baseCols = themeBase[thm][isTrack ? 'meadow' : biome] || themeBase.grass.meadow;
+  let baseCols = tile.biome==='water' ? ['#184e70'] : (themeBase[thm][isTrack ? 'meadow' : biome] || themeBase.grass.meadow);
 
   if(true) {
-      c.fillStyle=baseCols[0]; hexPath(3); c.fill();
-      c.save(); hexPath(1); c.clip();
-
-      let seed = tile.cx*13.37 + tile.cy*42.0;
-      const rnd = ()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
-
-      // Low-poly faceted overlay
-      for(let i=0; i<35; i++) {
-          c.beginPath();
-          c.moveTo(lc+(rnd()-0.5)*R*2.2, lc+(rnd()-0.5)*R*2.2);
-          c.lineTo(lc+(rnd()-0.5)*R*2.2, lc+(rnd()-0.5)*R*2.2);
-          c.lineTo(lc+(rnd()-0.5)*R*2.2, lc+(rnd()-0.5)*R*2.2);
-          c.fillStyle = rnd()>0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-          c.fill();
+      c.save(); hexPath(0.5); c.clip(); // Strict outer clip to prevent bleeding
+      c.fillStyle=baseCols[0]; c.fill();
+      // Dome highlight (deco + track tiles)
+      { const grad=c.createRadialGradient(lc,lc,0,lc,lc,R*1.1);
+        grad.addColorStop(0,  'rgba(255,255,255,0.12)');
+        grad.addColorStop(0.5,'rgba(255,255,255,0.03)');
+        grad.addColorStop(1,  'rgba(0,0,0,0.18)');
+        c.fillStyle=grad;
+        c.beginPath();
+        for(let i=0;i<6;i++){const a=Math.PI/3*i;i===0?c.moveTo(lc+R*Math.cos(a),lc+R*Math.sin(a)):c.lineTo(lc+R*Math.cos(a),lc+R*Math.sin(a));}
+        c.closePath(); c.fill(); 
+        if (tile.biome === 'water') {
+          let seed = tile.cx*13.37 + tile.cy*42.0;
+          const rnd = ()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+          c.strokeStyle='rgba(255,255,255,0.06)';
+          c.lineWidth=5; c.lineCap='round';
+          for(let j=0; j<15; j++){
+            let wx = lc + (rnd()-0.5)*R*1.4, wy = lc + (rnd()-0.5)*R*1.4;
+            c.beginPath(); c.moveTo(wx,wy); c.lineTo(wx+R*(0.1+rnd()*0.15), wy); c.stroke();
+          }
+        }
       }
-
-      // Catan-style heavy 3D border
-      hexPath(0);
-      c.lineWidth=14; c.strokeStyle='rgba(0,0,0,0.15)'; c.stroke();
-      c.lineWidth=6; c.strokeStyle='rgba(255,255,255,0.15)'; c.stroke();
-
-      if(tile.isDeco) {
-          if (biome === 'forest') {
-              for(let i=0; i<25; i++){
-                  let tx=lc+(rnd()-0.5)*R*1.4, ty=lc+(rnd()-0.5)*R*1.4, sz=30+rnd()*25;
-                  let isSnow = thm === 'snow';
-                  let baseCol = isSnow ? '#b0d0d0' : (thm==='desert'?'#8a9a40':'#2d6a2f');
-                  let midCol  = isSnow ? '#d0e8e8' : (thm==='desert'?'#a0b050':'#3a8c3d');
-                  let topCol  = isSnow ? '#ffffff' : (thm==='desert'?'#c0d060':'#4eb552');
-
-                  function polyCirc(x,y,r,sides,color, rotOff) {
-                      c.fillStyle=color; c.beginPath();
-                      for(let s=0;s<sides;s++){
-                          let a=rotOff+s*Math.PI*2/sides;
-                          s===0?c.moveTo(x+r*Math.cos(a),y+r*Math.sin(a)):c.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));
-                      }
-                      c.fill(); c.strokeStyle='rgba(0,0,0,0.2)'; c.lineWidth=2; c.stroke();
-                  }
-                  let rot=rnd()*Math.PI;
-                  polyCirc(tx, ty, sz, 6, baseCol, rot);
-                  polyCirc(tx, ty, sz*0.7, 6, midCol, rot+0.2);
-                  polyCirc(tx, ty, sz*0.4, 6, topCol, rot-0.1);
-              }
-          }
-          else if (biome === 'stone') {
-              if (thm === 'urban') {
-                  for(let i=0; i<20; i++){
-                      let tx=lc+(rnd()-0.5)*R*1.4, ty=lc+(rnd()-0.5)*R*1.4, w=50+rnd()*40, h=50+rnd()*40;
-                      let offset = 15 + rnd()*20; // 3D depth offset for top-down view
-
-                      c.fillStyle='rgba(0,0,0,0.4)'; // drop shadow
-                      c.fillRect(tx-w/2+15, ty-h/2+15, w, h);
-
-                      // Building mass (sides showing depth)
-                      c.fillStyle='#334'; c.beginPath(); c.moveTo(tx-w/2,ty-h/2); c.lineTo(tx-w/2+offset,ty-h/2-offset); c.lineTo(tx+w/2+offset,ty-h/2-offset); c.lineTo(tx+w/2,ty-h/2); c.fill();
-                      c.fillStyle='#445'; c.beginPath(); c.moveTo(tx+w/2,ty-h/2); c.lineTo(tx+w/2+offset,ty-h/2-offset); c.lineTo(tx+w/2+offset,ty+h/2-offset); c.lineTo(tx+w/2,ty+h/2); c.fill();
-
-                      // Flat roof
-                      c.fillStyle='#223'; c.fillRect(tx-w/2, ty-h/2, w, h);
-                      c.strokeStyle='#556'; c.lineWidth=3; c.strokeRect(tx-w/2, ty-h/2, w, h);
-
-                      // Roof AC unit / detail
-                      c.fillStyle='#112'; c.fillRect(tx-w/4, ty-h/4, w/2, h/2);
-                  }
-              } else {
-                  for(let i=0; i<12; i++){
-                      let tx=lc+(rnd()-0.5)*R*1.3, ty=lc+(rnd()-0.5)*R*1.3, r=50+rnd()*60;
-                      let p1={x:tx, y:ty-r}, p2={x:tx+r, y:ty}, p3={x:tx, y:ty+r}, p4={x:tx-r, y:ty};
-                      let cTop = thm==='snow' ? '#ffffff' : '#bbbbbb';
-                      let cR = thm==='desert' ? '#c8a070' : '#888888';
-                      let cB = thm==='desert' ? '#a88560' : '#555555';
-                      let cL = thm==='desert' ? '#e0c090' : '#aaaaaa';
-
-                      // Top-down pyramid shapes
-                      c.fillStyle=cTop; c.beginPath(); c.moveTo(tx,ty); c.lineTo(p1.x,p1.y); c.lineTo(p2.x,p2.y); c.fill(); c.strokeStyle='rgba(0,0,0,0.1)'; c.stroke();
-                      c.fillStyle=cR; c.beginPath(); c.moveTo(tx,ty); c.lineTo(p2.x,p2.y); c.lineTo(p3.x,p3.y); c.fill(); c.stroke();
-                      c.fillStyle=cB; c.beginPath(); c.moveTo(tx,ty); c.lineTo(p3.x,p3.y); c.lineTo(p4.x,p4.y); c.fill(); c.stroke();
-                      c.fillStyle=cL; c.beginPath(); c.moveTo(tx,ty); c.lineTo(p4.x,p4.y); c.lineTo(p1.x,p1.y); c.fill(); c.stroke();
-                  }
-              }
-          }
-          else if (biome === 'wheat') {
-              for(let i=0; i<18; i++){
-                  let tx=lc+(rnd()-0.5)*R*1.3, ty=lc+(rnd()-0.5)*R*1.3, sz=60+rnd()*40;
-                  c.fillStyle=rnd()>0.5?'#e6c300':'#d4b000';
-                  // Top-down hex field
-                  c.beginPath();
-                  for(let s=0;s<6;s++){
-                      let a=s*Math.PI/3;
-                      s===0?c.moveTo(tx+sz*Math.cos(a),ty+sz*Math.sin(a)):c.lineTo(tx+sz*Math.cos(a),ty+sz*Math.sin(a));
-                  }
-                  c.fill(); c.strokeStyle='#c2a000'; c.lineWidth=6; c.stroke();
-                  // Tractor lines
-                  c.strokeStyle='rgba(0,0,0,0.15)'; c.lineWidth=3;
-                  for(let o=-sz*0.8; o<sz*0.8; o+=14) {
-                      c.beginPath(); c.moveTo(tx-sz*0.8, ty+o); c.lineTo(tx+sz*0.8, ty+o); c.stroke();
-                  }
-              }
-          }
-          else if (biome === 'dirt') {
-              for(let i=0; i<20; i++){
-                  let tx=lc+(rnd()-0.5)*R*1.4, ty=lc+(rnd()-0.5)*R*1.4, sz=30+rnd()*40;
-                  // Top-down craters/rocks
-                  c.fillStyle='rgba(0,0,0,0.15)';
-                  c.beginPath();
-                  for(let s=0;s<7;s++){
-                      let a=s*Math.PI*2/7;
-                      let r2=sz*(0.8+rnd()*0.4);
-                      s===0?c.moveTo(tx+r2*Math.cos(a),ty+r2*Math.sin(a)):c.lineTo(tx+r2*Math.cos(a),ty+r2*Math.sin(a));
-                  }
-                  c.fill();
-
-                  c.fillStyle='rgba(255,255,255,0.08)';
-                  c.beginPath(); c.arc(tx-sz*0.2,ty-sz*0.2,sz*0.4,0,Math.PI*2); c.fill();
-              }
-          }
-      }
-
       c.restore();
-      if(tile.isDeco) { tCache.set(ck,oc); return oc; }
+      
+    // Catan-style border ON TOP of everything
+  c.save();
+  hexPath(0.5); c.clip(); // strict clip
+  c.lineWidth=18; c.strokeStyle='rgba(235, 210, 150, 0.45)'; hexPath(-9); c.stroke();
+  c.lineWidth=12; c.strokeStyle='rgba(20, 15, 10, 1.0)'; hexPath(-4); c.stroke(); // thick solid black border at edge
+  c.restore();
+  if(tile.isDeco) { tCache.set(ck,oc); return oc; }
   }
   const bzL=getLocalBezier(tile);
   function drawBez(lw,style){
@@ -513,86 +469,212 @@ function renderTile(tile){
   }
   if(tile.isStart)drawLineAcross(0.05,'#00ff00',12);
   if(tile.isFinish){
-    // Worn kopottas checkered hex fill
+    // Clean checkered pattern
     c.save();
-    hexPath(0);
-    c.clip();
-    const _sq=220; // large chunky squares, R~1020 so ~9 across
-    // Offset slightly so pattern isn't perfectly centered (more natural)
+    hexPath(0); c.clip();
+    const _sq=220;
     const _ox=37, _oy=53;
     const _startX=lc-R-_sq+_ox, _startY=lc-R-_sq+_oy;
     const _cols2=Math.ceil(R*2/_sq)+3, _rows2=Math.ceil(R*2/_sq)+3;
-    // Seeded random for worn tones
-    let _rs=(tile.cx*17+tile.cy*31)|0;
-    function _rw(){_rs=(_rs*1664525+1013904223)&0xffffffff;return(_rs>>>0)/4294967296;}
     for(let _r=0;_r<_rows2;_r++){
       for(let _cl=0;_cl<_cols2;_cl++){
         const _white=(_r+_cl)%2===0;
-        // Worn tones: whites go 185-235, blacks go 8-38
-        const _v=_white?(185+Math.floor(_rw()*50)):(8+Math.floor(_rw()*30));
-        c.fillStyle=`rgb(${_v},${_v},${_v})`;
+        c.fillStyle=_white?'#eeeeee':'#0a0a0a';
         c.fillRect(_startX+_cl*_sq,_startY+_r*_sq,_sq,_sq);
       }
     }
-    // Heavy worn overlay: dark smudge patches
-    _rs=(tile.cx*71+tile.cy*113)|0;
-    for(let _i=0;_i<22;_i++){
-      const _tx=lc-R*0.8+_rw()*R*1.6, _ty=lc-R*0.8+_rw()*R*1.6;
-      const _rx=60+_rw()*200, _ry=30+_rw()*120;
-      c.fillStyle=`rgba(0,0,0,${0.06+_rw()*0.15})`;
-      c.beginPath();c.ellipse(_tx,_ty,_rx,_ry,_rw()*Math.PI,0,Math.PI*2);c.fill();
-    }
-    // Tyre streak marks across the finish
-    _rs=(tile.cx*53+tile.cy*97)|0;
-    c.lineWidth=18+_rw()*30;
-    for(let _i=0;_i<8;_i++){
-      const _sx=lc-R*0.6+_rw()*R*1.2;
-      c.strokeStyle=`rgba(0,0,0,${0.12+_rw()*0.18})`;
-      c.beginPath();c.moveTo(_sx,lc-R);c.lineTo(_sx+(_rw()-0.5)*80,lc+R);c.stroke();
-    }
-    // Edge vignette to blend into road
-    const _grad=c.createRadialGradient(lc,lc,R*0.3,lc,lc,R*1.05);
-    _grad.addColorStop(0,'rgba(0,0,0,0)');
-    _grad.addColorStop(1,'rgba(0,0,0,0.45)');
-    c.fillStyle=_grad;
-    hexPath(0);c.fill();
-    
-    // Bemélyedés (3D Inner Indent)
+    c.restore();
+    // Dome highlight over finish
     c.save();
-    c.lineWidth=24;
-    c.strokeStyle='rgba(0,0,0,0.6)';
-    hexPath(-6); c.stroke(); // Dark inner shadow
-    c.lineWidth=8;
-    c.strokeStyle='rgba(255,255,255,0.2)';
-    hexPath(2); c.stroke(); // Light outer edge
+    hexPath(1); c.clip();
+    const _fgrad = c.createRadialGradient(lc, lc, 0, lc, lc, R*1.1);
+    _fgrad.addColorStop(0,   'rgba(255,255,255,0.12)');
+    _fgrad.addColorStop(0.5, 'rgba(255,255,255,0.03)');
+    _fgrad.addColorStop(1,   'rgba(0,0,0,0.18)');
+    c.fillStyle = _fgrad;
+    c.beginPath();
+    for(let i=0;i<6;i++){const a=Math.PI/3*i;i===0?c.moveTo(lc+R*Math.cos(a),lc+R*Math.sin(a)):c.lineTo(lc+R*Math.cos(a),lc+R*Math.sin(a));}
+    c.closePath(); c.fill();
+    c.restore();
+    
+  }
+    // Cross tile: junction with central pad + 4 arms to edges
+  // Kereszteződés
+  // Kereszteződés
+  if(tile.isCross && tile.entry2>=0 && tile.exit2>=0){
+    c.save();hexPath(1);c.clip();
+
+    const p1 = edgeMid(lc, lc, tile.entry);
+    const p2 = edgeMid(lc, lc, tile.exit);
+    const p3 = edgeMid(lc, lc, tile.entry2);
+    const p4 = edgeMid(lc, lc, tile.exit2);
+
+    function drawBaseCross(lineWidth, color) {
+      c.beginPath();
+      c.moveTo(p1.x, p1.y); c.lineTo(p2.x, p2.y);
+      c.moveTo(p3.x, p3.y); c.lineTo(p4.x, p4.y);
+      c.strokeStyle = color;
+      c.lineWidth = lineWidth;
+      c.lineCap = 'butt';
+      c.stroke();
+
+      c.beginPath();
+      c.arc(lc, lc, lineWidth/2, 0, Math.PI*2);
+      c.fillStyle = color;
+      c.fill();
+    }
+
+    drawBaseCross(w + 30, 'rgba(0,0,0,0.3)');
+    drawBaseCross(w + 16, '#2c2c2c');
+
+    // Alap sötét aszfalt, amire a PWM blokkokat rajzoljuk
+    drawBaseCross(w, '#383838');
+
+    // PWM-szerű "keresztbe csíkozás" (textúra blokkok) a 4 bekötő úton
+    // Minél közelebb érünk a kereszteződéshez, annál sűrűbbek/vékonyabbak lesznek a blokkok!
+    const S = w / 120;
+    const centerDist = 35 * S; // Rombusz széle nagyjából
+    const edgeDist = R;
+
+    for(const e of [tile.entry, tile.exit, tile.entry2, tile.exit2]) {
+      const em = edgeMid(lc, lc, e);
+      const angle = Math.atan2(em.y - lc, em.x - lc);
+
+      let currR = edgeDist;
+
+      // Kívülről (szélétől) haladunk befelé (középpont felé)
+      // A PWM lényege: a gap (sötét csík) mondjuk fix 6px, de a világos aszfalt blokk hossza csökken!
+      while(currR > centerDist) {
+        // Blokkhossz (dash) a távolság függvényében:
+        // Kívül (currR = R) kb. 160, belül (currR = centerDist) kb. 40
+        let progress = (currR - centerDist) / (edgeDist - centerDist);
+        let blockLen = 30 + 130 * Math.pow(progress, 1.5); 
+        let gapLen = 6 + 4 * (1 - progress); // A rés picit tágul vagy fix marad
+
+        let rEnd = currR;
+        let rStart = Math.max(centerDist, currR - blockLen);
+
+        // Világos fő aszfalt
+        c.strokeStyle = '#3b3b3b';
+        c.lineWidth = w;
+        c.lineCap = 'butt';
+        c.beginPath();
+        c.moveTo(lc + Math.cos(angle)*rStart, lc + Math.sin(angle)*rStart);
+        c.lineTo(lc + Math.cos(angle)*rEnd, lc + Math.sin(angle)*rEnd);
+        c.stroke();
+
+        // Belső sötétebb aszfalt sáv a blokkon belül
+        c.strokeStyle = '#353535';
+        c.lineWidth = w * 0.85;
+        c.beginPath();
+        c.moveTo(lc + Math.cos(angle)*rStart, lc + Math.sin(angle)*rStart);
+        c.lineTo(lc + Math.cos(angle)*rEnd, lc + Math.sin(angle)*rEnd);
+        c.stroke();
+
+        currR = rStart - gapLen;
+      }
+    }
+
+    const edges = [tile.entry, tile.exit, tile.entry2, tile.exit2];
+    const a1 = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+    const a2 = Math.atan2(p4.y - p3.y, p4.x - p3.x);
+    const n1x = -Math.sin(a1), n1y = Math.cos(a1);
+    const n2x = -Math.sin(a2), n2y = Math.cos(a2);
+
+    const d = 35 * S; 
+
+    c.beginPath();
+    c.moveTo(lc + d*n1x + d*n2x, lc + d*n1y + d*n2y); 
+    c.lineTo(lc - d*n1x + d*n2x, lc - d*n1y + d*n2y); 
+    c.lineTo(lc - d*n1x - d*n2x, lc - d*n1y - d*n2y); 
+    c.lineTo(lc + d*n1x - d*n2x, lc + d*n1y - d*n2y); 
+    c.closePath();
+
+    c.fillStyle = '#2f2f2f'; 
+    c.fill();
+
+    function drawDashedArms(lineWidth, color, dashArray, gapR) {
+      c.strokeStyle = color;
+      c.lineWidth = lineWidth;
+      c.lineCap = 'butt';
+      c.setLineDash(dashArray);
+      c.beginPath();
+      for(const e of edges) {
+        const em = edgeMid(lc, lc, e);
+        const a = Math.atan2(lc - em.y, lc - em.x); 
+        const endX = lc - Math.cos(a) * gapR;
+        const endY = lc - Math.sin(a) * gapR;
+        c.moveTo(em.x, em.y);
+        c.lineTo(endX, endY);
+      }
+      c.stroke();
+      c.setLineDash([]);
+    }
+
+    drawDashedArms(w - 8*S, 'rgba(0,0,0,0.2)', [40*S, 40*S], w/2);
+
+    const xLen = 20 * S;
+
+    // Kifelé futó, fokozatosan vékonyodó sárga sávok
+    const wEdge = 12; // Eredeti játék normál vonalvastagsága
+    const wCenter = 12 * S; // Jelenlegi vastagság a kereszteződés közepén
+    const dashLen = 40 * S;
+    const gapLen = 40 * S;
+    const startR = 60 * S;
+
+    c.fillStyle = 'rgba(220,180,50,0.4)';
+    for(const e of edges) {
+      const em = edgeMid(lc, lc, e);
+      const angle = Math.atan2(em.y - lc, em.x - lc); 
+      const distEdge = Math.hypot(em.x - lc, em.y - lc);
+
+      let currR = startR;
+      while(currR < distEdge) {
+        let r1 = currR;
+        let r2 = Math.min(currR + dashLen, distEdge);
+
+        // Progress: 0 a közepénél (startR), 1 a csempe szélénél
+        let p1 = Math.max(0, (r1 - startR) / (distEdge - startR));
+        let p2 = Math.max(0, (r2 - startR) / (distEdge - startR));
+
+        let w1 = wCenter - (wCenter - wEdge) * p1;
+        let w2 = wCenter - (wCenter - wEdge) * p2;
+
+        c.save();
+        c.translate(lc, lc);
+        c.rotate(angle);
+        c.beginPath();
+        c.moveTo(r1, -w1/2);
+        c.lineTo(r2, -w2/2);
+        c.lineTo(r2, w2/2);
+        c.lineTo(r1, w1/2);
+        c.closePath();
+        c.fill();
+        c.restore();
+
+        currR += dashLen + gapLen;
+      }
+    }
+
+    c.save();
+    c.translate(lc, lc);
+    c.beginPath();
+    c.rotate(a1);
+    c.rect(-xLen, -6*S, xLen*2, 12*S);
+    c.fillStyle = 'rgba(220,180,50,0.4)'; c.fill();
+    c.rotate(a2 - a1);
+    c.rect(-xLen, -6*S, xLen*2, 12*S);
+    c.fill();
     c.restore();
 
     c.restore();
-    // Finish line stripe at exit edge (bright, sharp)
-    c.save();
-    const _fa=edgeAngle(tile.exit);
-    const _fmid=edgeMid(lc,lc,tile.exit);
-    const _fw=tile.isNarrow?w*0.85:w*0.85;
-    const _flen=32,_sq2=16;
-    const _cols=Math.ceil(_fw/_sq2)+1,_rows=Math.ceil(_flen/_sq2)+1;
-    c.translate(_fmid.x,_fmid.y);c.rotate(_fa+Math.PI/2);
-    c.beginPath();c.rect(-_fw/2,-_flen/2,_fw,_flen);c.clip();
-    for(let _r=0;_r<_rows;_r++){
-      for(let _cl=0;_cl<_cols;_cl++){
-        c.fillStyle=(_r+_cl)%2===0?'#eeeeee':'#0a0a0a';
-        c.fillRect(-_fw/2+_cl*_sq2,-_flen/2+_r*_sq2,_sq2,_sq2);
-      }
-    }
-    c.restore();
   }
-  function kerb(e){
-    const mid=edgeMid(lc,lc,e),a=edgeAngle(e),p=a-Math.PI/2,sw=(w*0.5*2)/10;
-    for(let s=0;s<10;s++){
-      c.save();c.translate(mid.x+Math.cos(p)*(-w*0.5+sw*s+sw*0.5),mid.y+Math.sin(p)*(-w*0.5+sw*s+sw*0.5));c.rotate(a);
-      c.fillStyle=s%2===0?'#5a1010':'#9e9080';c.fillRect(-sw*0.48,-12,sw*0.96,24);c.restore();
-    }
-  }
-  kerb(tile.entry);kerb(tile.exit);
+  c.save();
+  hexPath(0.5); c.clip(); // strict clip
+  c.lineWidth=18; c.strokeStyle='rgba(235, 210, 150, 0.45)'; hexPath(-9); c.stroke();
+  c.lineWidth=12; c.strokeStyle='rgba(20, 15, 10, 1.0)'; hexPath(-4); c.stroke(); // thick solid black border at edge
+  c.restore();
+
   tCache.set(ck,oc);return oc;
   }catch(e){console.warn('renderTile err',e);return null;}
 }
@@ -678,17 +760,30 @@ function _syncToggleUI(){
   overlay.addEventListener('mouseup',onRelease);
 })();
 const keys={};
-document.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
-document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+document.addEventListener('keydown',e=>{
+  keys[e.key.toLowerCase()]=true;
+  if(e.code==='Space'){e.preventDefault();toggleHeld=true;_syncToggleUI();}
+});
+document.addEventListener('keyup',e=>{
+  keys[e.key.toLowerCase()]=false;
+  if(e.code==='Space'){e.preventDefault();toggleHeld=false;toggleDir*=-1;_syncToggleUI();}
+});
 
+
+function warmCache(){
+  for(const t of allTiles){
+    renderTile(t);
+  }
+}
 function resetGame(){
-  tCache.clear();buildTrack();
+  _finishFrameDone=false;
+  tCache.clear();buildTrack();warmCache();
   trackTiles.forEach(t=>t.visited=false);
   toggleDir=1;toggleHeld=false;_syncToggleUI();
   const st=trackTiles[0],em=edgeMid(st.cx,st.cy,st.exit),em0=edgeMid(st.cx,st.cy,st.entry);
   car={x:st.cx,y:st.cy,angle:Math.atan2(em.y-em0.y,em.x-em0.x),
     speed:0,trail:[],skidMarks:[],falling:false,fallAlpha:1,
-    tIdx:allTiles.length-trackTiles.length,onHex:true,onRoad:true,steerVisual:0};
+    trackIdx:0,onHex:true,onRoad:true,steerVisual:0};
   prevCarX=car.x;prevCarY=car.y;
   cam={x:car.x,y:car.y,angle:car.angle,zoom:ZOOM_BASE};
   particles=[];lastSteerDir=0;steerReverseTimer=0;
@@ -716,8 +811,8 @@ function update(ts){
 
   let goL=false,goR=false;
   if(!finished){
-    goL=btnL.v||keys['arrowleft']||keys['a']||(toggleHeld&&toggleDir===-1);
-    goR=btnR.v||keys['arrowright']||keys['d']||(toggleHeld&&toggleDir===1);
+    goL=btnL.v||(toggleHeld&&toggleDir===-1);
+    goR=btnR.v||(toggleHeld&&toggleDir===1);
   }
 
   const wasBraking=car.isBraking; const gas=goL||goR,brake=!finished&&!gas; car.isBraking=brake; if(brake && !wasBraking) car.skidId=(car.skidId||0)+1;
@@ -763,62 +858,68 @@ function update(ts){
   car.y+=Math.sin(car.angle)*car.speed*dt;
 
   let candidates=[];
-  for(let i=0;i<allTiles.length;i++){if(inHex(car.x,car.y,allTiles[i].cx,allTiles[i].cy))candidates.push(i);}
+  for(let i=0;i<allTiles.length;i++){
+    const t=allTiles[i];
+    if(Math.hypot(car.x-t.cx,car.y-t.cy)<R+5 && inHex(car.x,car.y,t.cx,t.cy)) candidates.push(i);
+  }
 
-  let newIdx=car.tIdx;
+  let physIdx=-1;
   if(candidates.length>0){
-    car.onHex=true;
+    physIdx=candidates[0]; // fallback
     let tCand=candidates.filter(c=>!allTiles[c].isDeco);
     if(tCand.length>0){
-      const curTI=allTiles[car.tIdx]?.idx??-1;
+      const curTI=car.trackIdx;
       tCand=tCand.filter(c=>{const ti=allTiles[c].idx;return ti===curTI||ti===curTI+1||ti===curTI-1;});
-      if(!tCand.length){const fi=allTiles.findIndex(t=>!t.isDeco&&t.idx===curTI);tCand=[fi>=0?fi:car.tIdx];}
-      let minRD=Infinity;
-      for(const c of tCand){
-        let rd=distToRoadCenter(car.x,car.y,allTiles[c]);
-        if(allTiles[c].idx===curTI)rd-=100;if(allTiles[c].idx===(curTI+1)%trackTiles.length)rd-=50;
-        if(rd<minRD){minRD=rd;newIdx=c;}
-      }
-    } else newIdx=candidates[0];
-  } else car.onHex=false;
-
-  car.tIdx=newIdx;
-  const cT=allTiles[car.tIdx];
-  const pW=getPhysicsWheels(car.x,car.y,car.angle);
-  let maxWDist=0,outHex=false;
-
-  if(cT&&!car.falling){
-    for(const w of pW){
-      if(!cT.isDeco){
-        let best=distToRoadCenter(w.x,w.y,cT);
-        for(const c of candidates){
-          const t=allTiles[c];
-          if(!t.isDeco){const d=distToRoadCenter(w.x,w.y,t);if(d<best)best=d;}
+      if(tCand.length>0){
+        let minRD=Infinity;
+        for(const c of tCand){
+          let rd=distToRoadCenter(car.x,car.y,allTiles[c]);
+          if(allTiles[c].idx===curTI)rd-=100;
+          if(allTiles[c].idx===(curTI+1)%trackTiles.length)rd-=50;
+          if(rd<minRD){minRD=rd;physIdx=c;}
         }
-        if(best>maxWDist)maxWDist=best;
+        car.trackIdx=allTiles[physIdx].idx;
       }
-      let wIn=false;
-      for(const c of candidates){if(inHex(w.x,w.y,allTiles[c].cx,allTiles[c].cy)){wIn=true;break;}}
-      if(!wIn)for(const t of allTiles){if(inHex(w.x,w.y,t.cx,t.cy)){wIn=true;break;}}
-      if(!wIn)outHex=true;
     }
-    if(!cT.isDeco){
-      const mAD=(cT.isNarrow?ROAD_W*0.45:ROAD_W)/2;
-      car.onRoad=maxWDist<=mAD+5;
+  }
 
-      // Grass dust from rear wheels
-      if(!car.onRoad&&car.speed>80&&Math.random()<0.5){
-        const _dx=Math.cos(car.angle+Math.PI/2),_dy=Math.sin(car.angle+Math.PI/2);
-        const _rx=Math.cos(car.angle)*(-CAR_REAR_AXLE),_ry=Math.sin(car.angle)*(-CAR_REAR_AXLE);
-        spawnDust(car.x+_rx+_dx*CAR_REAR_TRACK/2, car.y+_ry+_dy*CAR_REAR_TRACK/2, 1,'rgba(100,200,60,0.75)');
-        spawnDust(car.x+_rx-_dx*CAR_REAR_TRACK/2, car.y+_ry-_dy*CAR_REAR_TRACK/2, 1,'rgba(120,210,50,0.75)');
+  let isWater = physIdx===-1 || allTiles[physIdx].biome==='water';
+
+  if(!finished && isWater){
+    car.falling=true;
+    car.fallAlpha=1;
+    car.trail=[];car.skidMarks=[];
+    doFlash('WATER!', '#00aaff');
+  }
+
+  if(!isWater && physIdx!==-1 && !allTiles[physIdx].isDeco){
+    const cT=allTiles[physIdx];
+    const pW=getPhysicsWheels(car.x,car.y,car.angle);
+    let maxWDist=0;
+    for(const w of pW){
+      let best=distToRoadCenter(w.x,w.y,cT);
+      if(cT.isCross&&cT.entry2>=0){const d2=distToRoadCenter2(w.x,w.y,cT);if(d2<best)best=d2;}
+      for(const c of candidates){
+        const t=allTiles[c];
+        if(!t.isDeco){
+          const d=distToRoadCenter(w.x,w.y,t);if(d<best)best=d;
+          if(t.isCross&&t.entry2>=0){const d2=distToRoadCenter2(w.x,w.y,t);if(d2<best)best=d2;}
+        }
       }
-
-      
-    } else car.onRoad=false;
-    if(!finished&&(!car.onHex||outHex)){
-      car.falling=true;car.fallAlpha=1;car.trail=[];car.skidMarks=[];doFlash('OFF TRACK!','#ff3366');
+      if(best>maxWDist)maxWDist=best;
     }
+    const mAD=(cT.isNarrow?ROAD_W*0.45:ROAD_W)/2;
+    car.onRoad=maxWDist<=mAD+5;
+
+    // Grass dust from rear wheels
+    if(!car.onRoad&&car.speed>80&&Math.random()<0.5){
+      const _dx=Math.cos(car.angle+Math.PI/2),_dy=Math.sin(car.angle+Math.PI/2);
+      const _rx=Math.cos(car.angle)*-CAR_REAR_AXLE,_ry=Math.sin(car.angle)*-CAR_REAR_AXLE;
+      spawnDust(car.x+_rx+_dx*CAR_REAR_TRACK/2,car.y+_ry+_dy*CAR_REAR_TRACK/2,1,'rgba(100,200,60,0.75)');
+      spawnDust(car.x+_rx-_dx*CAR_REAR_TRACK/2,car.y+_ry-_dy*CAR_REAR_TRACK/2,1,'rgba(120,210,50,0.75)');
+    }
+  } else {
+    car.onRoad=false;
   }
 
   if(!car.falling&&!finished){
@@ -955,8 +1056,10 @@ function drawLayer(){
     if(Math.hypot(t.cx-cam.x,t.cy-cam.y)>cullR)continue;
     const _rt=renderTile(t);if(!_rt)continue;ctx.save();ctx.translate(t.cx,t.cy);ctx.drawImage(_rt,-half,-half);
     if(t.visited&&!t.isDeco){
-      ctx.beginPath();for(let i=0;i<6;i++)i===0?ctx.moveTo(R*Math.cos(Math.PI/3*i),R*Math.sin(Math.PI/3*i)):ctx.lineTo(R*Math.cos(Math.PI/3*i),R*Math.sin(Math.PI/3*i));
-      ctx.closePath();ctx.strokeStyle='#ffcc00';ctx.lineWidth=14;ctx.stroke();
+      // Draw the yellow visited marker inside the tile so it doesn't slip under adjacent tiles
+      const rVis = R - 10;
+      ctx.beginPath();for(let i=0;i<6;i++)i===0?ctx.moveTo(rVis*Math.cos(Math.PI/3*i),rVis*Math.sin(Math.PI/3*i)):ctx.lineTo(rVis*Math.cos(Math.PI/3*i),rVis*Math.sin(Math.PI/3*i));
+      ctx.closePath();ctx.strokeStyle='rgba(255,204,0,0.8)';ctx.lineWidth=16;ctx.stroke();
     }
     ctx.restore();
   }
@@ -992,8 +1095,8 @@ function drawScene(){
   ctx.scale(cam.zoom,cam.zoom);
   ctx.translate(-cam.x,-cam.y);
   drawLayer();
-  if(car.trail.length>1&&!car.falling&&!car.isBraking)drawTrail();
-  if(!car.falling&&!car.isBraking)drawSkidMarks();
+  if(car.trail.length>1&&!car.falling)drawTrail();
+  if(!car.falling)drawSkidMarks();
   drawParticles();
   drawCar();
   ctx.restore();
@@ -1003,7 +1106,7 @@ function updHUD(){
   document.getElementById('hT').textContent=fmt(raceTime);
   if(trackTiles&&trackTiles.length){
     const vis=trackTiles.filter(t=>t.visited).length;
-    document.getElementById('hHex').textContent='HEXES: '+vis+' / '+trackTiles.length;
+    document.getElementById('hHex').innerHTML=`<span style='color:${vis===trackTiles.length?'#00ff00':'#ccc'}'>${vis}</span> / ${trackTiles.length}`;
   }
 }
 let flT=null;
@@ -1016,7 +1119,7 @@ function doFlash(t,color){
 }
 
 function showFinish(){
-  state='finish';const ov=document.getElementById('finishMenu');
+  state='finish';document.getElementById('c').classList.add('blur-bg');const ov=document.getElementById('finishMenu');
   const stars=calcStars(currentLevelIdx,raceTime);
   const [t1,t2,t3]=getStarTimes(currentLevelIdx);
   let nextBtn='';
