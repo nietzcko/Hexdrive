@@ -8,7 +8,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:#04060a; overflow:hidden; width:100vw; height:100vh; font-family:'Share Tech Mono','Courier New',monospace; color:#e0f4ff; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:none; }
-#c { display:block; position:fixed; inset:0; width:100%; height:100%; touch-action:none; }
+#c { display:block; position:fixed; inset:0; width:100%; height:100%; touch-action:none; z-index:1; pointer-events:none; }
 #hud { position:fixed; top:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; padding:16px 24px; pointer-events:none; z-index:10; display:none; }
 .hud-left { display:flex; justify-content:flex-start; }
 .hud-center { display:flex; justify-content:center; align-items:flex-start; }
@@ -26,7 +26,7 @@ body { background:#04060a; overflow:hidden; width:100vw; height:100vh; font-fami
 #fl { position:fixed; top:35%; left:50%; transform:translate(-50%,-50%); font-size:clamp(20px,6vw,46px); font-weight:900; letter-spacing:4px; text-align:center; color:#ffffff; text-shadow:0 2px 6px rgba(0,0,0,0.9); pointer-events:none; opacity:0; z-index:15; transition:opacity .2s; }
 .ob { background:rgba(0,0,0,0.65); border:none; color:#fff; border-radius:6px; padding:14px 24px; font-size:16px; font-weight:bold; cursor:pointer; transition:all .2s; backdrop-filter:blur(4px); font-family:inherit; }
 .ob:hover,.ob:active { background:#00cfff; color:#000; box-shadow:0 2px 8px rgba(0,0,0,0.8); }
-#lvlSel { position:fixed; inset:0; background:transparent; z-index:100; display:flex; flex-direction:column; align-items:center; padding:40px 20px; overflow-y:auto; }
+#lvlSel { position:fixed; inset:0; background:rgba(4,6,20,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:200; display:flex; flex-direction:column; align-items:center; padding:40px 20px; overflow-y:auto; }
 #lvlGrid { display:grid; grid-template-columns:1fr; gap:10px; width:100%; max-width:500px; }
 .lvlBtn { background:rgba(0,0,0,0.65); border:none; border-radius:8px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; backdrop-filter:blur(4px); font-variant-numeric:tabular-nums; }
 .lvlBtn:hover { transform:scale(1.03); background:rgba(0,50,100,0.9); box-shadow:0 0 15px #00cfff; }
@@ -36,6 +36,8 @@ body { background:#04060a; overflow:hidden; width:100vw; height:100vh; font-fami
 .lvlBtn.locked .ln { color:#555; }
 .lvlBtn.locked .lt { color:#555; }
 #finishMenu { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:100; display:none; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(4px); touch-action:none; text-align:center; padding:20px; }
+
+#c.blur-bg { filter: blur(3px) brightness(0.5); }
 </style>
 </head>
 <body>
@@ -170,7 +172,7 @@ function initMenu(){
   document.getElementById('btnMenu').style.display='none';
   currentLevelIdx=0;
   const tlvl=LEVEL_DATA[0];
-  SEQ=tlvl.map(t=>({entry:t[0],exit:t[1],isStart:t[2]==='S',isFinish:t[2]==='F',isOverpass:t[2]==='O',isNarrow:t[2]==='N'}));
+  SEQ=tlvl.map(t=>({entry:t[0],exit:t[1],isStart:t[2]==='S',isFinish:t[2]==='F',isNarrow:t[2]==='N'}));
   tCache.clear();buildTrack();
   cam={x:trackTiles[0].cx,y:trackTiles[0].cy,angle:0,zoom:0.6};
   car=null;
@@ -203,7 +205,7 @@ function initMenu(){
 
 function loadLevel(idx){
   currentLevelIdx=idx;
-  SEQ=LEVEL_DATA[idx].map(t=>({entry:t[0],exit:t[1],isStart:t[2]==='S',isFinish:t[2]==='F',isOverpass:t[2]==='O',isNarrow:t[2]==='N'}));
+  SEQ=LEVEL_DATA[idx].map(t=>({entry:t[0],exit:t[1],isStart:t[2]==='S',isFinish:t[2]==='F',isNarrow:t[2]==='N'}));
   document.getElementById('lvlSel').style.display='none';
   document.getElementById('finishMenu').style.display='none';
   document.getElementById('hud').style.display='grid';
@@ -246,8 +248,7 @@ function buildTrack(){
   for(let i=0;i<SEQ.length;i++){
     const s=SEQ[i];
     trackTiles.push({idx:i,cx,cy,key:`T_${i}`,entry:s.entry,exit:s.exit,
-      isStart:s.isStart||false,isFinish:s.isFinish||false,
-      isOverpass:s.isOverpass||false,isNarrow:s.isNarrow||false,isDeco:false,visited:false,theme:cTheme});
+      isStart:s.isStart||false,isFinish:s.isFinish||false,isNarrow:s.isNarrow||false,isDeco:false,visited:false,theme:cTheme});
     centerMap.add(`${Math.round(cx)}_${Math.round(cy)}`);
     const nc=neighborCenter(cx,cy,s.exit);cx=nc.x;cy=nc.y;
   }
@@ -268,7 +269,7 @@ function buildTrack(){
       if(!centerMap.has(key)){
         centerMap.add(key);
         allTiles.push({idx:'d'+decoIdx++,cx:acx,cy:acy,key:`D_${decoIdx}`,
-          isDeco:true,biome:biomes[Math.floor(Math.random()*biomes.length)],isOverpass:false,visited:true,theme:cTheme});
+          isDeco:true,biome:biomes[Math.floor(Math.random()*biomes.length)],visited:true,theme:cTheme});
       }
     }
   }
@@ -327,7 +328,7 @@ const tCache=new Map();
 
 function renderTile(tile){
   try{
-  const ck=`${tile.key}_${tile.entry}_${tile.exit}_${tile.isNarrow?'N':'W'}_${tile.isOverpass?'O':'G'}_${tile.biome}_${tile.theme||'grass'}`;
+  const ck=`${tile.key}_${tile.entry}_${tile.exit}_${tile.isNarrow?'N':'W'}_${tile.biome}_${tile.theme||'grass'}`;
   if(tCache.has(ck))return tCache.get(ck);
   const oc=document.createElement('canvas');oc.width=oc.height=TSIZE;
   const c=oc.getContext('2d');const lc=TSIZE/2;
@@ -349,7 +350,7 @@ function renderTile(tile){
   let isTrack = !tile.isDeco;
   let baseCols = themeBase[thm][isTrack ? 'meadow' : biome] || themeBase.grass.meadow;
 
-  if (tile.isDeco || !tile.isOverpass) {
+  if(true) {
       c.fillStyle=baseCols[0]; hexPath(3); c.fill();
       c.save(); hexPath(1); c.clip();
 
@@ -480,19 +481,9 @@ function renderTile(tile){
   c.save();hexPath(1);c.clip();
   const w=tile.isNarrow?ROAD_W*0.45:ROAD_W;
 
-  if(tile.isOverpass){
-    c.shadowColor='rgba(0,30,60,0.8)';c.shadowBlur=30;c.shadowOffsetY=15;c.shadowOffsetX=15;
-    drawBez(w+40,'#2a2a2a');
-    c.shadowColor='transparent';
-    c.setLineDash([40, 15]);
-    drawBez(w+28,'#4a4a4a');
-    c.setLineDash([]);
-    drawBez(w+12,'#6a6a6a');
-  } else {
-    // Dirt/stone base border
-    drawBez(w+30,'rgba(0,0,0,0.3)'); 
-    drawBez(w+16,'#2c2c2c');
-  }
+  // Dirt/stone base border
+  drawBez(w+30,'rgba(0,0,0,0.3)');
+  drawBez(w+16,'#2c2c2c');
 
   // Base dark stone road
   drawBez(w,'#383838');
@@ -697,22 +688,14 @@ function resetGame(){
   const st=trackTiles[0],em=edgeMid(st.cx,st.cy,st.exit),em0=edgeMid(st.cx,st.cy,st.entry);
   car={x:st.cx,y:st.cy,angle:Math.atan2(em.y-em0.y,em.x-em0.x),
     speed:0,trail:[],skidMarks:[],falling:false,fallAlpha:1,
-    tIdx:0,onHex:true,onRoad:true,steerVisual:0};
+    tIdx:allTiles.length-trackTiles.length,onHex:true,onRoad:true,steerVisual:0};
   prevCarX=car.x;prevCarY=car.y;
   cam={x:car.x,y:car.y,angle:car.angle,zoom:ZOOM_BASE};
   particles=[];lastSteerDir=0;steerReverseTimer=0;
   raceStart=0;raceTime=0;finished=false;isNewRecord=false;updHUD();
 }
 
-function checkHighUp(idx){
-  const t=allTiles[idx];if(!t||t.isDeco)return false;if(t.isOverpass)return true;
-  const ti=t.idx;
-  if(typeof ti==='number'){
-    if(trackTiles[ti+1]&&trackTiles[ti+1].isOverpass)return true;
-    if(ti>0&&trackTiles[ti-1]&&trackTiles[ti-1].isOverpass)return true;
-  }
-  return false;
-}
+
 
 let lastTs=0;
 function update(ts){
@@ -787,13 +770,13 @@ function update(ts){
     car.onHex=true;
     let tCand=candidates.filter(c=>!allTiles[c].isDeco);
     if(tCand.length>0){
-      const isHigh=checkHighUp(car.tIdx);
-      tCand=tCand.filter(c=>c===car.tIdx||c===car.tIdx+1||c===car.tIdx-1||(isHigh?checkHighUp(c):!allTiles[c].isOverpass));
-      if(!tCand.length)tCand=[car.tIdx];
+      const curTI=allTiles[car.tIdx]?.idx??-1;
+      tCand=tCand.filter(c=>{const ti=allTiles[c].idx;return ti===curTI||ti===curTI+1||ti===curTI-1;});
+      if(!tCand.length){const fi=allTiles.findIndex(t=>!t.isDeco&&t.idx===curTI);tCand=[fi>=0?fi:car.tIdx];}
       let minRD=Infinity;
       for(const c of tCand){
         let rd=distToRoadCenter(car.x,car.y,allTiles[c]);
-        if(c===car.tIdx)rd-=100;if(c===(car.tIdx+1)%trackTiles.length)rd-=50;
+        if(allTiles[c].idx===curTI)rd-=100;if(allTiles[c].idx===(curTI+1)%trackTiles.length)rd-=50;
         if(rd<minRD){minRD=rd;newIdx=c;}
       }
     } else newIdx=candidates[0];
@@ -806,7 +789,14 @@ function update(ts){
 
   if(cT&&!car.falling){
     for(const w of pW){
-      if(!cT.isDeco){const d=distToRoadCenter(w.x,w.y,cT);if(d>maxWDist)maxWDist=d;}
+      if(!cT.isDeco){
+        let best=distToRoadCenter(w.x,w.y,cT);
+        for(const c of candidates){
+          const t=allTiles[c];
+          if(!t.isDeco){const d=distToRoadCenter(w.x,w.y,t);if(d<best)best=d;}
+        }
+        if(best>maxWDist)maxWDist=best;
+      }
       let wIn=false;
       for(const c of candidates){if(inHex(w.x,w.y,allTiles[c].cx,allTiles[c].cy)){wIn=true;break;}}
       if(!wIn)for(const t of allTiles){if(inHex(w.x,w.y,t.cx,t.cy)){wIn=true;break;}}
@@ -824,10 +814,7 @@ function update(ts){
         spawnDust(car.x+_rx-_dx*CAR_REAR_TRACK/2, car.y+_ry-_dy*CAR_REAR_TRACK/2, 1,'rgba(120,210,50,0.75)');
       }
 
-      if(cT.isOverpass&&maxWDist>mAD-8){
-        car.x-=Math.cos(car.angle)*car.speed*dt*1.5;car.y-=Math.sin(car.angle)*car.speed*dt*1.5;car.speed*=0.5;
-        if(!finished)doFlash('GUARDRAIL!','#ffaa00');car.onRoad=true;
-      }
+      
     } else car.onRoad=false;
     if(!finished&&(!car.onHex||outHex)){
       car.falling=true;car.fallAlpha=1;car.trail=[];car.skidMarks=[];doFlash('OFF TRACK!','#ff3366');
@@ -840,17 +827,15 @@ function update(ts){
     }
   }
 
-  const isHighUp=checkHighUp(car.tIdx);
-
   // Skid marks
   if(car.onRoad&&!finished&&car.isBraking&&car.speed>10){
     const dx=Math.cos(car.angle+Math.PI/2),dy=Math.sin(car.angle+Math.PI/2);
     const rX=Math.cos(car.angle)*(-CAR_REAR_AXLE),rY=Math.sin(car.angle)*(-CAR_REAR_AXLE);
-    car.skidMarks.push({p1:{x:car.x+rX+dx*CAR_REAR_TRACK/2,y:car.y+rY+dy*CAR_REAR_TRACK/2},wheel:'l',high:isHighUp,id:car.skidId});
-    car.skidMarks.push({p1:{x:car.x+rX-dx*CAR_REAR_TRACK/2,y:car.y+rY-dy*CAR_REAR_TRACK/2},wheel:'r',high:isHighUp,id:car.skidId});
+    car.skidMarks.push({p1:{x:car.x+rX+dx*CAR_REAR_TRACK/2,y:car.y+rY+dy*CAR_REAR_TRACK/2},wheel:'l',id:car.skidId});
+    car.skidMarks.push({p1:{x:car.x+rX-dx*CAR_REAR_TRACK/2,y:car.y+rY-dy*CAR_REAR_TRACK/2},wheel:'r',id:car.skidId});
     if(car.skidMarks.length>500)car.skidMarks.splice(0,2);
   }
-  if(!car.falling&&car.speed>15){car.trail.push({x:car.x,y:car.y,high:isHighUp});if(car.trail.length>200)car.trail.shift();}
+  if(!car.falling&&car.speed>15){car.trail.push({x:car.x,y:car.y});if(car.trail.length>200)car.trail.shift();}
 
   if(raceStart===0&&car.speed>15)raceStart=ts;
   if(raceStart>0&&!finished)raceTime=ts-raceStart;
@@ -896,7 +881,7 @@ function drawBackground(){
   ctx.fillStyle=bg;ctx.fillRect(0,0,cv.width,cv.height);
 }
 
-function drawSkidMarks(isHigh){
+function drawSkidMarks(){
   if(car.skidMarks.length<2)return;
   ctx.lineWidth=10;ctx.lineCap='round';ctx.lineJoin='round';
   for(const side of['l','r']){
@@ -904,7 +889,7 @@ function drawSkidMarks(isHigh){
     let last=null;
     for(const m of car.skidMarks){
       if(m.wheel!==side) continue; 
-      if(m.high!==isHigh){last=null;continue;}
+      
       if(!last || last.id !== m.id) ctx.moveTo(m.p1.x,m.p1.y);
       else ctx.lineTo(m.p1.x,m.p1.y);
       last=m;
@@ -913,11 +898,11 @@ function drawSkidMarks(isHigh){
   }
 }
 
-function drawTrail(isHigh){
+function drawTrail(){
   ctx.beginPath();let dr=false;
   for(let i=1;i<car.trail.length;i++){
     const a=car.trail[i-1],b=car.trail[i];
-    if(a.high!==isHigh||b.high!==isHigh){dr=false;continue;}
+    
     if(!dr){ctx.moveTo(a.x,a.y);dr=true;}ctx.lineTo(b.x,b.y);
   }
   ctx.strokeStyle='rgba(255,50,0,0.5)';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
@@ -962,11 +947,11 @@ function drawCarBody(){
   ctx.save();ctx.translate(0,L*0.25);ctx.fillText(String(currentLevelIdx+1),0,0);ctx.restore();
 }
 
-function drawLayer(overpass){
+function drawLayer(){
   const half=TSIZE/2;
   const cullR=(Math.max(cv.width,cv.height)/cam.zoom)*1.8;
   for(const t of allTiles){
-    if(!!t.isOverpass!==overpass)continue;
+    
     if(Math.hypot(t.cx-cam.x,t.cy-cam.y)>cullR)continue;
     const _rt=renderTile(t);if(!_rt)continue;ctx.save();ctx.translate(t.cx,t.cy);ctx.drawImage(_rt,-half,-half);
     if(t.visited&&!t.isDeco){
@@ -1006,15 +991,11 @@ function drawScene(){
   ctx.rotate(-cam.angle-Math.PI/2);
   ctx.scale(cam.zoom,cam.zoom);
   ctx.translate(-cam.x,-cam.y);
-
-  const isHighUp=checkHighUp(car.tIdx);
-  drawLayer(false);
-  if(car.trail.length>1&&!car.falling&&!car.isBraking)drawTrail(false);drawSkidMarks(false);
+  drawLayer();
+  if(car.trail.length>1&&!car.falling&&!car.isBraking)drawTrail();
+  if(!car.falling&&!car.isBraking)drawSkidMarks();
   drawParticles();
-  if(!isHighUp)drawCar();
-  drawLayer(true);
-  if(car.trail.length>1&&!car.falling&&!car.isBraking)drawTrail(true);drawSkidMarks(true);
-  if(isHighUp)drawCar();
+  drawCar();
   ctx.restore();
 }
 
@@ -1074,8 +1055,7 @@ function loop(ts){
       ctx.translate(cv.width/2,cv.height/2);
       ctx.scale(cam.zoom,cam.zoom);
       ctx.translate(-cam.x,-cam.y);
-      drawLayer(false);
-      drawLayer(true);
+      drawLayer();
       ctx.restore();
     } else {
       drawBackground();
