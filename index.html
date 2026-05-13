@@ -116,7 +116,7 @@ const MAX_ROAD = 900;
 const MAX_HEX  = 280;
 const ACCEL    = 600;
 const BRAKE    = 2000;
-const COAST    = 1000;
+const COAST    = 140;
 const STEER    = 1.5;
 
 // Steering penalty: rapid left-right toggling costs speed
@@ -740,6 +740,10 @@ const keys={};
 document.addEventListener('keydown',e=>{
   keys[e.key.toLowerCase()]=true;
   if(e.code==='Space'){e.preventDefault();toggleHeld=true;_syncToggleUI();}
+  if(e.code==='Backspace'||e.key.toLowerCase()==='r'){
+    e.preventDefault();
+    if(state==='racing'||state==='finished'){resetGame();state='racing';}
+  }
 });
 document.addEventListener('keyup',e=>{
   keys[e.key.toLowerCase()]=false;
